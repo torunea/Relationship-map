@@ -112,28 +112,40 @@ class RelationshipMap {
     
     // イベントリスナー初期化
     initializeEventListeners() {
-    // 検索入力
-    this.searchInput.addEventListener('input', () => {
-        this.searchFilter = this.searchInput.value;
-        this.render();
-    });
-    
-    // 検索モード変更
-    this.searchModeSelect.addEventListener('change', () => {
-        this.searchMode = this.searchModeSelect.value;
-        this.render();
-    });
-    
-    // ズームコントロール
-    this.zoomInButton.addEventListener('click', this.handleZoomIn.bind(this));
-    this.zoomOutButton.addEventListener('click', this.handleZoomOut.bind(this));
-    this.zoomResetButton.addEventListener('click', this.handleZoomReset.bind(this));
-    
-    // ウィンドウリサイズ
-    window.addEventListener('resize', () => {
+        // 検索入力
+        if (this.searchInput) {
+        this.searchInput.addEventListener('input', () => {
+            this.searchFilter = this.searchInput.value;
+            this.render();
+        });
+        }
+        
+        // 検索モード変更
+        if (this.searchModeSelect) {
+        this.searchModeSelect.addEventListener('change', () => {
+            this.searchMode = this.searchModeSelect.value;
+            this.render();
+        });
+        }
+        
+        // ズームコントロール
+        if (this.zoomInButton) {
+        this.zoomInButton.addEventListener('click', this.handleZoomIn.bind(this));
+        }
+        
+        if (this.zoomOutButton) {
+        this.zoomOutButton.addEventListener('click', this.handleZoomOut.bind(this));
+        }
+        
+        if (this.zoomResetButton) {
+        this.zoomResetButton.addEventListener('click', this.handleZoomReset.bind(this));
+        }
+        
+        // ウィンドウリサイズ
+        window.addEventListener('resize', () => {
         this.updateMapSize();
         this.render();
-    });
+        });
     }
     
     // カテゴリフィルター描画

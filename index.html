@@ -73,6 +73,7 @@
         <button id="zoom-out" class="zoom-button">-</button>
         <div id="zoom-level" class="zoom-level">100%</div>
         <button id="zoom-in" class="zoom-button">+</button>
+        <button id="zoom-reset" class="zoom-button reset">R</button>
     </div>
     
     <!-- ホバー情報ポップアップ -->
@@ -92,3 +93,13 @@
 <script src="relationshipMap.js"></script>
 </body>
 </html>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof RelationshipMap === 'function') {
+        window.map = new RelationshipMap();
+    } else {
+        console.error('RelationshipMap クラスが定義されていません');
+    }
+});
+</script>

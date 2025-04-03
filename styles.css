@@ -187,6 +187,10 @@ body {
     min-width: 3rem;
 }
 
+.zoom-button.reset {
+    margin-left: 5px;
+}
+
 /* ホバー情報 */
 .hover-info {
     position: absolute;
