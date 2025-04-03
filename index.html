@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リレーションシップマップ</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- D3.jsライブラリ -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <div id="relationship-map-container" class="relationship-map-container">
+    <div class="control-panel">
+      <div class="flex-wrap items-center gap-4">
+        <div class="search-box">
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="キーワード検索"
+          />
+          <select id="search-mode" class="search-mode-select">
+            <option value="OR">OR</option>
+            <option value="AND">AND</option>
+          </select>
+        </div>
+        
+        <div id="category-filters" class="category-filters">
+          <!-- カテゴリフィルターはJavaScriptで動的に生成されます -->
+        </div>
+        
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-color person-color"></div>
+            <span>人物</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color article-color"></div>
+            <span>論考</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color book-color"></div>
+            <span>書籍</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color org-color"></div>
+            <span>組織</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="line-info">
+        <span>線:</span>
+        <span class="line-type">
+          <span class="line-sample mention-line"></span>
+          <span>説明文に言及</span>
+        </span>
+        <span class="help-text">マウスホイールで縦スクロール、右下のボタンでズーム</span>
+      </div>
+    </div>
+    
+    <div class="map-container">
+      <svg id="relationship-map"></svg>
+      
+      <!-- ズームコントロール -->
+      <div class="zoom-controls">
+        <button id="zoom-in" class="zoom-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+        </button>
+        
+        <div id="zoom-level" class="zoom-level">100%</div>
+        
+        <button id="zoom-out" class="zoom-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+          </svg>
+        </button>
+        
+        <button id="zoom-reset" class="zoom-button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 12l5-5M3 12l5 5"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- ホバー情報ポップアップ -->
+      <div id="hover-info" class="hover-info" style="display: none;"></div>
+      
+      <!-- 選択ノード詳細パネル (人物) -->
+      <div id="person-detail" class="person-detail" style="display: none;"></div>
+      
+      <!-- 選択ノード詳細パネル (人物以外) -->
+      <div id="node-detail" class="node-detail" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="relationshipMap.js"></script>
+</body>
+</html>
