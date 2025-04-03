@@ -881,7 +881,7 @@ class RelationshipMap {
                 <div class="node-detail-section-title">情報</div>
                 <div class="node-detail-type">
                     <div class="node-detail-type-indicator" style="background-color: ${categoryColor}"></div>
-                    <span>分類: ${node.category}</span>
+                    <span>${node.category}</span>
                 </div>
             </div>
             `;
