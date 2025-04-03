@@ -19,7 +19,7 @@ function processData(externalData = null) {
         { id: 2, name: '日本の自然風景', type: '書籍', year: 2018, tags: '写真家,自然', description: '佐藤花子と渡辺誠が撮影した風景写真集' },
         { id: 3, name: '都市と人間', type: '論考', year: 2020, tags: '建築家,都市計画', description: '鈴木一郎が都市空間について論じた評論' },
         { id: 4, name: 'AIの倫理', type: '書籍', year: 2022, tags: 'エンジニア,技術論', description: '山田健太と伊藤直子による技術と社会の関係性についての考察' },
-        { id: 5, name: '現代デザイン史', type: '書籍', year: 2016, tags: 'デザイナー,歴史', description: '高橋恵子が編纂した現代デザインの歴史書' },
+        { id: 5, name: '現代デザイン史とかなんとか', type: '書籍', year: 2016, tags: 'デザイナー,歴史', description: '高橋恵子が編纂した現代デザインの歴史書。長い文章をここに入れるとどのような表示になるか見てみたいのでこの項目は非常に長い文字列で構成されています。人物についても加藤美咲や山田健太も頑張っています。' },
         { id: 6, name: '光と影の表現', type: '論考', year: 2019, tags: '写真家,技法', description: '加藤美咲による写真表現の技法についての論考' },
     ],
     organizations: [
