@@ -584,9 +584,9 @@ class RelationshipMap {
     node.filter(d => d.type !== '人物')
         .append("rect")
         .attr("width", rectWidth + padding * 2) // パディングを考慮
-        .attr("height", 60 + padding * 2) // パディングを考慮
+        .attr("height", 70 + padding * 2) // 高さを少し増やしてテキストが収まるようにする
         .attr("x", -(rectWidth + padding * 2) / 2) // 中央揃え
-        .attr("y", -(30 + padding))
+        .attr("y", -(35 + padding)) // 高さに合わせて調整
         .attr("rx", 5) // 角を丸くする
         .attr("ry", 5)
         .attr("fill", "#E2E8F0") // 無彩色に統一
@@ -643,51 +643,72 @@ class RelationshipMap {
 
     // ノードラベル描画 - 人物以外用（テキスト折り返し機能付き）
     node.filter(d => d.type !== '人物')
-    .append("text")
-    .attr("text-anchor", "middle")
-    .attr("font-size", "11px")
-    .attr("fill", "#4A5568") // 黒っぽい色に変更（背景が無彩色なので）
-    .attr("pointer-events", "none")
-    .attr("dy", "-0.5em")
-    .each(function(d) {
-        const text = d3.select(this);
-        const words = d.name.split(/\s+/);
-        let line = "";
-        let lineNumber = 0;
-        const lineHeight = 1.1; // ems
-        const width = rectWidth - 20; // 余白を考慮
-        
-        // 1行目
-        for (let i = 0; i < words.length; i++) {
-            const testLine = line + words[i] + " ";
-            // 行の幅をテスト
-            if (testLine.length * 6 > width && i > 0) { // 大まかな文字幅の見積もり
-                // 1行目を追加
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .attr("fill", "#4A5568") // 黒っぽい色
+        .attr("pointer-events", "none")
+        .attr("dy", "-0.5em")
+        .each(function(d) {
+            const text = d3.select(this);
+            const words = d.name.split(/\s+|(?<=[\u3001\u3002\uff0c\uff0e\u300c\u300d])/); // 空白と日本語の句読点で分割
+            let line = "";
+            let lineNumber = 0;
+            const lineHeight = 1.2; // ems
+            const width = rectWidth - 20; // 余白を考慮
+            
+            // 1行目
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + (line ? ' ' : '') + words[i];
+                
+                // 行の幅をテスト（日本語の場合は文字数で概算）
+                const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
+                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6;
+                
+                if (estimatedWidth > width && i > 0) {
+                    // 1行目を追加
+                    text.append("tspan")
+                        .attr("x", 0)
+                        .attr("dy", lineNumber === 0 ? 0 : lineHeight + "em")
+                        .text(line);
+                    
+                    line = words[i];
+                    lineNumber++;
+                    
+                    // 最大2行までに制限
+                    if (lineNumber >= 1 && i < words.length - 1) {
+                        // 2行目
+                        const nextLine = line;
+                        for (let j = i + 1; j < words.length; j++) {
+                            const testNextLine = nextLine + (nextLine ? ' ' : '') + words[j];
+                            const nextIsJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[j]);
+                            const nextEstimatedWidth = nextIsJapanese ? testNextLine.length * 11 : testNextLine.length * 6;
+                            
+                            if (nextEstimatedWidth <= width) {
+                                line = testNextLine;
+                                i = j;
+                            } else {
+                                // 入らない場合は省略記号を追加
+                                line = nextLine + "...";
+                                i = words.length; // ループを抜ける
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                } else {
+                    line = testLine;
+                }
+            }
+            
+            // 最後の行を追加
+            if (line) {
                 text.append("tspan")
                     .attr("x", 0)
-                    .attr("dy", 0)
-                    .text(line.trim());
-                
-                line = words[i] + " ";
-                lineNumber++;
-                
-                // 最大2行まで
-                if (lineNumber >= 1) {
-                    break;
-                }
-            } else {
-                line = testLine;
+                    .attr("dy", lineNumber === 0 ? 0 : lineHeight + "em")
+                    .text(line);
             }
-        }
-        
-        // 2行目（または1行目が途中で終わった場合）
-        if (line.trim()) {
-            text.append("tspan")
-                .attr("x", 0)
-                .attr("dy", lineNumber ? lineHeight + "em" : 0)
-                .text(line.trim() + (lineNumber && words.length > i ? "..." : ""));
-        }
-    });
+        });
 
     // 人物ノードにカテゴリを小さく表示
     node.filter(d => d.type === '人物')
