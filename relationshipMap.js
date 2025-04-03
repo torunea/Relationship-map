@@ -491,51 +491,64 @@ class RelationshipMap {
         }))
         
         .force("x", d3.forceX().x(d => {
-        // 人物ノードは中央に、それ以外は左右に分ける
-        if (d.type === '人物') {
-            return -250; // 人物ノードは左寄りに
-        } else {
-            return 250; // 組織/書籍/論考は右寄りに
-        }
-        }).strength(0.3))
-        .force("y", d3.forceY().y(d => {
-        // 人物ノードはY軸方向に均等に分散、それ以外は年に基づいて配置
-        if (d.type === '人物') {
-            // 人物の場合は関連するノードの平均位置に近づける
-            const relatedNodes = this.filteredLinks
-            .filter(link => {
-                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-                return sourceId === d.id || targetId === d.id;
-            })
-            .map(link => {
-                const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-                const targetId = typeof link.target === 'object' ? link.target.id : link.target;
-                const otherId = sourceId === d.id ? targetId : sourceId;
-                const otherNode = this.filteredNodes.find(n => n.id === otherId);
-                return otherNode && otherNode.year ? timelineScale(otherNode.year) : null;
-            })
-            .filter(y => y !== null);
-            
-            if (relatedNodes.length > 0) {
-            // 関連ノードの平均Y座標を使用
-            const avgY = relatedNodes.reduce((a, b) => a + b, 0) / relatedNodes.length;
-            return avgY;
+            // 人物以外のノードを中心近くに、人物ノードを左右に分散
+            if (d.type !== '人物') {
+                return 0; // 人物以外のノードを中心に
             } else {
-            // 関連がない場合はタイムライン中央付近に配置
-            return timelineScale(minYear + (maxYear - minYear) / 2);
+                // 人物ノードの場合、関連ノードから少し離れた位置に配置
+                const relatedNodes = this.filteredLinks
+                    .filter(link => {
+                        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                        return sourceId === d.id || targetId === d.id;
+                    });
+                
+                // 関連ノードの平均X座標から少し離す
+                if (relatedNodes.length > 0) {
+                    // 索引をもとに左右に分散（奇数インデックスは左、偶数インデックスは右に）
+                    const index = this.filteredNodes.findIndex(n => n.id === d.id);
+                    return index % 2 === 0 ? -200 : 200;
+                } else {
+                    // 関連がない場合はランダムに左右に分散
+                    return Math.random() > 0.5 ? -400 : 400;
+                }
             }
-        } else if (d.year) {
-            // 年情報がある場合はタイムラインに基づいて配置
-            return timelineScale(d.year);
-        } else {
-            // 年情報がない場合はY軸方向に均等に分散
-            return this.timelineHeight / 2;
-        }
+        }).strength(0.4)) // 強めの力で引き寄せる
+        .force("y", d3.forceY().y(d => {
+            // 人物ノードはY軸方向に均等に分散、それ以外は年に基づいて配置
+            if (d.type === '人物') {
+                // 人物の場合は関連するノードの平均位置に近づける
+                const relatedNodes = this.filteredLinks
+                .filter(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    return sourceId === d.id || targetId === d.id;
+                })
+                .map(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+                    const otherId = sourceId === d.id ? targetId : sourceId;
+                    const otherNode = this.filteredNodes.find(n => n.id === otherId);
+                    return otherNode && otherNode.year ? timelineScale(otherNode.year) : null;
+                })
+                .filter(y => y !== null);
+                
+                if (relatedNodes.length > 0) {
+                    // 関連ノードの平均Y座標を使用
+                    const avgY = relatedNodes.reduce((a, b) => a + b, 0) / relatedNodes.length;
+                    return avgY;
+                } else {
+                    // 関連がない場合はタイムライン中央付近に配置
+                    return timelineScale(minYear + (maxYear - minYear) / 2);
+                }
+            } else if (d.year) {
+                // 年情報がある場合はタイムラインに基づいて配置
+                return timelineScale(d.year);
+            } else {
+                // 年情報がない場合はY軸方向に均等に分散
+                return this.timelineHeight / 2;
+            }
         }).strength(d => d.year ? 0.8 : 0.2)) // 年情報があるノードはより強く引き寄せる
-        .alphaDecay(0.01)
-        .alpha(0.5)
-        .alphaMin(0.001);
     
     // リンク描画
     const link = this.container.append("g")
