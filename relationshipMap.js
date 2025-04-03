@@ -310,45 +310,49 @@ class RelationshipMap {
     
     // ズーム機能セットアップ
     setupZoom(timelineScale) {
-    // ズームとパン機能を追加 - マウスホイールは縦スクロールのみに
-    this.zoom = d3.zoom()
+        // ズームとパン機能を追加 - マウスホイールは縦スクロールのみに
+        this.zoom = d3.zoom()
         .scaleExtent([0.3, 2])
         .on("zoom", (event) => {
-        // ズームレベルを保存
-        this.zoomLevel = event.transform.k;
-        this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
-        
-        // x方向のズームは無効化し、y方向のみスクロール可能に
-        const newTransform = d3.zoomIdentity
+            // ズームレベルを10%刻みに丸める
+            const rawScale = event.transform.k;
+            const roundedScale = Math.round(rawScale * 10) / 10;
+            
+            // ズームレベルを保存
+            this.zoomLevel = roundedScale;
+            this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+            
+            // x方向のズームは無効化し、y方向のみスクロール可能に
+            const newTransform = d3.zoomIdentity
             .translate(event.transform.x, event.transform.y)
-            .scale(event.transform.k);
-        this.container.attr("transform", newTransform);
+            .scale(roundedScale);
+            this.container.attr("transform", newTransform);
         })
         .filter(event => {
-        if (event.type === 'wheel') {
+            if (event.type === 'wheel') {
             event.preventDefault();
             const delta = event.deltaY * -0.1;
             const currentTransform = d3.zoomTransform(this.svg.node());
             const newTransform = d3.zoomIdentity
-            .translate(currentTransform.x, currentTransform.y + delta * 10)
-            .scale(currentTransform.k);
+                .translate(currentTransform.x, currentTransform.y + delta * 10)
+                .scale(currentTransform.k);
             
             this.container.attr("transform", newTransform);
             return false;
-        }
-        return !event.button;
+            }
+            return !event.button;
         });
-    
-    this.svg.call(this.zoom);
-    
-    // 初期表示位置
-    this.svg.call(
+        
+        this.svg.call(this.zoom);
+        
+        // 初期表示位置
+        this.svg.call(
         this.zoom.transform, 
         d3.zoomIdentity.translate(this.dimensions.width / 2, this.dimensions.height / 2).scale(0.8)
-    );
-    
-    this.zoomLevel = 0.8;
-    this.zoomLevelEl.textContent = '80%';
+        );
+        
+        this.zoomLevel = 0.8;
+        this.zoomLevelEl.textContent = '80%';
     }
     
     // タイムライン描画
@@ -743,8 +747,8 @@ class RelationshipMap {
     handleZoomIn() {
         const currentTransform = d3.zoomTransform(this.svg.node());
         
-        // 拡大
-        const newScale = Math.min(currentTransform.k * 1.3, 2);
+        // 10%刻みで拡大 (最大200%)
+        const newScale = Math.min(Math.round((currentTransform.k + 0.1) * 10) / 10, 2.0);
         const newTransform = d3.zoomIdentity
         .translate(currentTransform.x, currentTransform.y)
         .scale(newScale);
@@ -753,13 +757,13 @@ class RelationshipMap {
         this.zoom.transform, newTransform
         );
     }
-
+    
     // ズームアウト
     handleZoomOut() {
         const currentTransform = d3.zoomTransform(this.svg.node());
         
-        // 縮小
-        const newScale = Math.max(currentTransform.k * 0.7, 0.3);
+        // 10%刻みで縮小 (最小30%)
+        const newScale = Math.max(Math.round((currentTransform.k - 0.1) * 10) / 10, 0.3);
         const newTransform = d3.zoomIdentity
         .translate(currentTransform.x, currentTransform.y)
         .scale(newScale);
