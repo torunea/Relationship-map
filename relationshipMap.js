@@ -493,7 +493,7 @@ class RelationshipMap {
         .force("x", d3.forceX().x(d => {
         // 人物ノードは中央に、それ以外は左右に分ける
         if (d.type === '人物') {
-            return 50; // 人物ノードは左寄りに
+            return -250; // 人物ノードは左寄りに
         } else {
             return 250; // 組織/書籍/論考は右寄りに
         }
