@@ -41,63 +41,87 @@ function processData(externalData = null) {
     
     // 人物ノード
     DATA.people.forEach(person => {
-    const personTags = parseTags(person.tags);
-    
-    // 人物カテゴリを収集
-    categories.add(person.category);
-    
-    // 人物ノードを追加
-    nodes.push({
-        id: `person-${person.id}`,
-        name: person.name,
-        type: '人物',
-        category: person.category,
-        tags: personTags,
-        radius: 35,
-        color: '#4299E1'
+        const personTags = parseTags(person.tags);
+        
+        // 人物カテゴリを収集
+        categories.add(person.category);
+        
+        // カテゴリーに基づいた色を設定
+        let color;
+        switch (person.category) {
+            case '建築家':
+                color = '#4299E1'; // 青
+                break;
+            case '写真家':
+                color = '#F6AD55'; // オレンジ
+                break;
+            case 'エンジニア':
+                color = '#48BB78'; // 緑
+                break;
+            case 'デザイナー':
+                color = '#F687B3'; // ピンク
+                break;
+            default:
+                color = '#A0AEC0'; // グレー
+        }
+        
+        // 人物ノードを追加
+        nodes.push({
+            id: `person-${person.id}`,
+            name: person.name,
+            type: '人物',
+            category: person.category,
+            tags: personTags,
+            radius: 35,
+            color: color
+        });
     });
-    });
-    
+
     // 論考・書籍ノード
     DATA.works.forEach(work => {
-    const workTags = parseTags(work.tags);
-    
-    // 年情報を収集
-    if (work.year) {
-        years.add(work.year);
-    }
-    
-    nodes.push({
-        id: `work-${work.id}`,
-        name: work.name,
-        type: work.type,
-        year: work.year,
-        tags: workTags,
-        description: work.description || '',
-        radius: 40,
-        color: work.type === '論考' ? '#F6AD55' : '#F687B3' // 論考はオレンジ、書籍はピンク
+        const workTags = parseTags(work.tags);
+        
+        // 年情報を収集
+        if (work.year) {
+            years.add(work.year);
+        }
+        
+        // タイプ用の色
+        const typeColor = work.type === '論考' ? '#F6AD55' : '#F687B3';
+        
+        nodes.push({
+            id: `work-${work.id}`,
+            name: work.name,
+            type: work.type,
+            year: work.year,
+            tags: workTags,
+            description: work.description || '',
+            radius: 40,
+            color: '#E2E8F0', // 無彩色に
+            typeColor: typeColor // タイプの色を保存
+        });
     });
-    });
-    
+
     // 組織ノード
     DATA.organizations.forEach(org => {
-    const orgTags = parseTags(org.tags);
-    
-    // 年情報を収集
-    if (org.year) {
-        years.add(org.year);
-    }
-    
-    nodes.push({
-        id: `org-${org.id}`,
-        name: org.name,
-        type: '組織',
-        year: org.year,
-        tags: orgTags,
-        description: org.description || '',
-        radius: 45,
-        color: '#805AD5'
-    });
+        const orgTags = parseTags(org.tags);
+        
+        // 年情報を収集
+        if (org.year) {
+            years.add(org.year);
+        }
+        
+        nodes.push({
+            id: `org-${org.id}`,
+            name: org.name,
+            type: '組織',
+            year: org.year,
+            tags: orgTags,
+            description: org.description || '',
+            radius: 45,
+            color: '#E2E8F0', // 無彩色に
+            typeColor: '#805AD5' // 組織の色
+        });
     });
     
     // 1. 人物と組織の紐付け - 説明文の直接言及のみ

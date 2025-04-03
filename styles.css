@@ -57,6 +57,21 @@ body {
     background-color: white;
 }
 
+.reset-filter-button {
+    margin-left: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    background-color: #e2e8f0;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.reset-filter-button:hover {
+    background-color: #cbd5e0;
+}
+
 /* カテゴリフィルター */
 .category-filters {
     display: flex;
@@ -274,7 +289,7 @@ body {
     top: 0;
     right: 0;
     height: 100%;
-    width: 16rem;
+    width: 24rem; /* 16remから24remに変更 */
     background-color: white;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
     padding: 1rem;

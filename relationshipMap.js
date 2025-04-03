@@ -127,6 +127,11 @@ class RelationshipMap {
             this.render();
         });
         }
+
+        // リセットボタン
+        if (this.resetFilterButton = document.getElementById('reset-filter')) {
+            this.resetFilterButton.addEventListener('click', this.resetFilters.bind(this));
+        }
         
         // ズームコントロール
         if (this.zoomInButton) {
@@ -526,134 +531,161 @@ class RelationshipMap {
     
     // ノード描画
     const node = this.container.append("g")
-        .attr("class", "nodes")
-        .selectAll(".node")
-        .data(this.filteredNodes)
-        .enter().append("g")
-        .attr("class", "node")
-        .on("mouseover", (event, d) => {
-        // 人物ノードのみホバー時に詳細表示
-        if (d.type === '人物') {
-            this.hoveredNode = d;
-            this.renderHoverInfo(d, event.pageX, event.pageY);
-        }
-        })
-        .on("mouseout", () => {
-        this.hoveredNode = null;
-        this.hideHoverInfo();
-        })
-        .on("click", (event, d) => {
-        this.selectedNode = d;
-        this.renderNodeDetail(d);
-        event.stopPropagation();
-        });
+    .attr("class", "nodes")
+    .selectAll(".node")
+    .data(this.filteredNodes)
+    .enter().append("g")
+    .attr("class", "node")
+    .on("mouseover", (event, d) => {
+    // 人物ノードのみホバー時に詳細表示
+    if (d.type === '人物') {
+        this.hoveredNode = d;
+        this.renderHoverInfo(d, event.pageX, event.pageY);
+    }
+    })
+    .on("mouseout", () => {
+    this.hoveredNode = null;
+    this.hideHoverInfo();
+    })
+    .on("click", (event, d) => {
+    this.selectedNode = d;
+    this.renderNodeDetail(d);
+    event.stopPropagation();
+    });
 
     // 人物ノードは円で描画
     node.filter(d => d.type === '人物')
-        .append("circle")
-        .attr("r", d => d.radius)
-        .attr("fill", d => d.color)
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1);
+    .append("circle")
+    .attr("r", d => d.radius)
+    .attr("fill", d => d.color)
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1);
 
-    // 人物以外のノードは四角形で描画
+    // 人物以外のノードは四角形で描画 - 無彩色に
     const rectWidth = 120; // 四角形の幅を固定
     node.filter(d => d.type !== '人物')
-        .append("rect")
-        .attr("width", rectWidth)
-        .attr("height", 60) // 2行分のテキストが入るように高さを増やす
-        .attr("x", -rectWidth / 2) // 中央揃え
-        .attr("y", -30)
-        .attr("rx", 5) // 角を丸くする
-        .attr("ry", 5)
-        .attr("fill", d => d.color)
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1);
+    .append("rect")
+    .attr("width", rectWidth)
+    .attr("height", 60) // 2行分のテキストが入るように高さを増やす
+    .attr("x", -rectWidth / 2) // 中央揃え
+    .attr("y", -30)
+    .attr("rx", 5) // 角を丸くする
+    .attr("ry", 5)
+    .attr("fill", "#E2E8F0") // 無彩色に統一
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 1);
+
+    // 人物以外のノードにタイプラベルを追加
+    node.filter(d => d.type !== '人物')
+    .append("rect")
+    .attr("width", 40)
+    .attr("height", 16)
+    .attr("x", -20)
+    .attr("y", 15)
+    .attr("rx", 3)
+    .attr("ry", 3)
+    .attr("fill", d => {
+        // タイプに応じた色を設定
+        if (d.type === '論考') return "#F6AD55"; // オレンジ
+        if (d.type === '書籍') return "#F687B3"; // ピンク
+        if (d.type === '組織') return "#805AD5"; // 紫
+        return "#A0AEC0"; // デフォルトはグレー
+    });
+
+    // タイプラベルのテキスト
+    node.filter(d => d.type !== '人物')
+    .append("text")
+    .text(d => d.type)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "8px")
+    .attr("fill", "#fff")
+    .attr("y", 25)
+    .attr("pointer-events", "none");
 
     // ノードラベル描画 - 人物用
     node.filter(d => d.type === '人物')
-        .append("text")
-        .text(d => d.name)
-        .attr("dy", "-0.2em")
-        .attr("text-anchor", "middle")
-        .attr("font-size", "11px")
-        .attr("fill", "#fff")
-        .attr("pointer-events", "none");
+    .append("text")
+    .text(d => d.name)
+    .attr("dy", "-0.2em")
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .attr("fill", "#fff")
+    .attr("pointer-events", "none");
 
     // ノードラベル描画 - 人物以外用（テキスト折り返し機能付き）
     node.filter(d => d.type !== '人物')
-        .append("text")
-        .attr("text-anchor", "middle")
-        .attr("font-size", "11px")
-        .attr("fill", "#fff")
-        .attr("pointer-events", "none")
-        .attr("dy", "-0.5em")
-        .each(function(d) {
-            const text = d3.select(this);
-            const words = d.name.split(/\s+/);
-            let line = "";
-            let lineNumber = 0;
-            const lineHeight = 1.1; // ems
-            const width = rectWidth - 20; // 余白を考慮
-            
-            // 1行目
-            for (let i = 0; i < words.length; i++) {
-                const testLine = line + words[i] + " ";
-                // 行の幅をテスト
-                if (testLine.length * 6 > width && i > 0) { // 大まかな文字幅の見積もり
-                    // 1行目を追加
-                    text.append("tspan")
-                        .attr("x", 0)
-                        .attr("dy", 0)
-                        .text(line.trim());
-                    
-                    line = words[i] + " ";
-                    lineNumber++;
-                    
-                    // 最大2行まで
-                    if (lineNumber >= 1) {
-                        break;
-                    }
-                } else {
-                    line = testLine;
-                }
-            }
-            
-            // 2行目（または1行目が途中で終わった場合）
-            if (line.trim()) {
+    .append("text")
+    .attr("text-anchor", "middle")
+    .attr("font-size", "11px")
+    .attr("fill", "#4A5568") // 黒っぽい色に変更（背景が無彩色なので）
+    .attr("pointer-events", "none")
+    .attr("dy", "-0.5em")
+    .each(function(d) {
+        const text = d3.select(this);
+        const words = d.name.split(/\s+/);
+        let line = "";
+        let lineNumber = 0;
+        const lineHeight = 1.1; // ems
+        const width = rectWidth - 20; // 余白を考慮
+        
+        // 1行目
+        for (let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + " ";
+            // 行の幅をテスト
+            if (testLine.length * 6 > width && i > 0) { // 大まかな文字幅の見積もり
+                // 1行目を追加
                 text.append("tspan")
                     .attr("x", 0)
-                    .attr("dy", lineNumber ? lineHeight + "em" : 0)
-                    .text(line.trim() + (lineNumber && words.length > i ? "..." : ""));
+                    .attr("dy", 0)
+                    .text(line.trim());
+                
+                line = words[i] + " ";
+                lineNumber++;
+                
+                // 最大2行まで
+                if (lineNumber >= 1) {
+                    break;
+                }
+            } else {
+                line = testLine;
             }
-        });
+        }
+        
+        // 2行目（または1行目が途中で終わった場合）
+        if (line.trim()) {
+            text.append("tspan")
+                .attr("x", 0)
+                .attr("dy", lineNumber ? lineHeight + "em" : 0)
+                .text(line.trim() + (lineNumber && words.length > i ? "..." : ""));
+        }
+    });
 
     // 人物ノードにカテゴリを小さく表示
     node.filter(d => d.type === '人物')
-        .append("text")
-        .text(d => d.category)
-        .attr("dy", "1em")
-        .attr("text-anchor", "middle")
-        .attr("font-size", "8px")
-        .attr("fill", "#fff")
-        .attr("opacity", 0.8)
-        .attr("pointer-events", "none");
+    .append("text")
+    .text(d => d.category)
+    .attr("dy", "1em")
+    .attr("text-anchor", "middle")
+    .attr("font-size", "8px")
+    .attr("fill", "#fff")
+    .attr("opacity", 0.8)
+    .attr("pointer-events", "none");
 
     // 論考・書籍・組織ノードに年を小さく表示
     node.filter(d => d.year && d.type !== '人物')
-        .append("text")
-        .text(d => d.year)
-        .attr("dy", "2em")
-        .attr("text-anchor", "middle")
-        .attr("font-size", "9px")
-        .attr("fill", "#fff")
-        .attr("font-weight", "bold")
-        .attr("pointer-events", "none");
+    .append("text")
+    .text(d => d.year)
+    .attr("dy", "-1.5em") // 上部に移動
+    .attr("text-anchor", "middle")
+    .attr("font-size", "9px")
+    .attr("fill", "#4A5568") // より暗い色に
+    .attr("font-weight", "bold")
+    .attr("pointer-events", "none");
 
     // SVGの外側をクリックした時に選択を解除
     this.svg.on("click", () => {
-        this.selectedNode = null;
-        this.hideNodeDetail();
+    this.selectedNode = null;
+    this.hideNodeDetail();
     });
     
     // シミュレーションを最適化して安定させる
@@ -845,6 +877,24 @@ class RelationshipMap {
     this.searchInput.value = name;
     this.searchFilter = name;
     this.render();
+    }
+
+    // フィルターをリセット
+    resetFilters() {
+        // 検索フィルターをクリア
+        this.searchInput.value = '';
+        this.searchFilter = '';
+        
+        // カテゴリフィルターをすべて選択状態に
+        this.categories.forEach(category => {
+            this.selectedCategories[category] = true;
+        });
+        
+        // カテゴリフィルターUI更新
+        this.renderCategoryFilters();
+        
+        // 再描画
+        this.render();
     }
     
     // IDでノードを選択
