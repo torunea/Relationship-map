@@ -420,7 +420,7 @@ class RelationshipMap {
         
         const timelineGroup = this.container.append("g")
             .attr("class", "timeline")
-            .attr("transform", "translate(-100, 0)"); // ここで左に100px移動
+            .attr("transform", "translate(-500, 0)"); // ここで左に100px移動
         
         // タイムラインの開始と終了を取得
         const minYear = this.years[0];
@@ -444,7 +444,7 @@ class RelationshipMap {
             yearGroup.append("line")
             .attr("x1", -5)
             .attr("y1", 0)
-            .attr("x2", 5)
+            .attr("x2", 1000) // 右側に長い線を描画
             .attr("y2", 0)
             .attr("stroke", "#A0AEC0")
             .attr("stroke-width", 1);
