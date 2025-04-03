@@ -146,6 +146,30 @@ class RelationshipMap {
         this.updateMapSize();
         this.render();
         });
+
+        // SVGのマウスホイールイベント処理
+        if (this.svg && this.svg.node()) {
+            this.svg.node().addEventListener('wheel', (event) => {
+                event.preventDefault();
+                
+                // 現在の変形を取得
+                const currentTransform = d3.zoomTransform(this.svg.node());
+                
+                // 縦方向のスクロール量
+                const scrollAmount = event.deltaY * 0.5;
+                
+                // 新しい変形を計算（X座標は維持、Y座標のみ変更）
+                const newTransform = d3.zoomIdentity
+                    .translate(currentTransform.x, currentTransform.y - scrollAmount)
+                    .scale(currentTransform.k);
+                
+                // 変形を適用
+                this.container.attr("transform", newTransform);
+                
+                // ズーム状態を更新
+                this.svg.property("__zoom", newTransform);
+            }, { passive: false });
+        }
     }
     
     // カテゴリフィルター描画
@@ -321,46 +345,49 @@ class RelationshipMap {
     }
     
     // ズーム機能セットアップ
+    // ズーム機能セットアップ
     setupZoom(timelineScale) {
-        // ズームとパン機能を追加 - マウスホイールは縦スクロールのみに
+        // ズームとパン機能を追加
         this.zoom = d3.zoom()
-        .scaleExtent([0.3, 2])
-        .on("zoom", (event) => {
-            // ズームレベルを10%刻みに丸める
-            const rawScale = event.transform.k;
-            const roundedScale = Math.round(rawScale * 10) / 10;
-            
-            // ズームレベルを保存
-            this.zoomLevel = roundedScale;
-            this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
-            
-            // x方向のズームは無効化し、y方向のみスクロール可能に
-            const newTransform = d3.zoomIdentity
-            .translate(event.transform.x, event.transform.y)
-            .scale(roundedScale);
-            this.container.attr("transform", newTransform);
-        })
-        .filter(event => {
-            if (event.type === 'wheel') {
-            event.preventDefault();
-            const delta = event.deltaY * -0.1;
-            const currentTransform = d3.zoomTransform(this.svg.node());
-            const newTransform = d3.zoomIdentity
-                .translate(currentTransform.x, currentTransform.y + delta * 10)
-                .scale(currentTransform.k);
-            
-            this.container.attr("transform", newTransform);
-            return false;
-            }
-            return !event.button;
-        });
+            .scaleExtent([0.3, 2]) // ズームの範囲
+            .on("zoom", (event) => {
+                // ズームレベルを10%刻みに丸める
+                const rawScale = event.transform.k;
+                const roundedScale = Math.round(rawScale * 10) / 10;
+                
+                // ズームレベルを保存
+                this.zoomLevel = roundedScale;
+                this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+                
+                // コンテナの変形を適用
+                this.container.attr("transform", event.transform);
+            });
         
-        this.svg.call(this.zoom);
+        // マウスホイールイベントを処理するよう設定
+        this.svg.call(this.zoom)
+            .on("wheel.zoom", (event) => {
+                event.preventDefault(); // デフォルトのスクロール動作を防止
+                
+                // 縦スクロールに変換
+                const delta = event.deltaY;
+                const currentTransform = d3.zoomTransform(this.svg.node());
+                
+                // 現在のスケールを維持したまま縦方向にのみ移動
+                const newTransform = d3.zoomIdentity
+                    .translate(currentTransform.x, currentTransform.y - delta * 0.5)
+                    .scale(currentTransform.k);
+                
+                // アニメーションなしで変形を適用
+                this.container.attr("transform", newTransform);
+                
+                // 現在のズーム状態を更新
+                this.svg.property("__zoom", newTransform);
+            });
         
         // 初期表示位置
         this.svg.call(
-        this.zoom.transform, 
-        d3.zoomIdentity.translate(this.dimensions.width / 2, this.dimensions.height / 2).scale(0.8)
+            this.zoom.transform, 
+            d3.zoomIdentity.translate(this.dimensions.width / 2, 0).scale(0.8)
         );
         
         this.zoomLevel = 0.8;
