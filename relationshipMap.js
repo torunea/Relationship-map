@@ -419,54 +419,55 @@ class RelationshipMap {
         if (this.showTimeline === false) return;
         
         const timelineGroup = this.container.append("g")
-            .attr("class", "timeline");
-    
-    // タイムラインの開始と終了を取得
-    const minYear = this.years[0];
-    const maxYear = this.years[this.years.length - 1];
-    
-    // タイムラインの軸を描画
-    timelineGroup.append("line")
-        .attr("x1", 0)
-        .attr("y1", timelineScale(minYear))
-        .attr("x2", 0)
-        .attr("y2", timelineScale(maxYear))
-        .attr("stroke", "#CBD5E0")
-        .attr("stroke-width", 2);
-    
-    // 年のマークと数字、横線を描画
-    this.years.forEach(year => {
-        const yearGroup = timelineGroup.append("g")
-        .attr("transform", `translate(0, ${timelineScale(year)})`);
+            .attr("class", "timeline")
+            .attr("transform", "translate(-100, 0)"); // ここで左に100px移動
         
-        // 年のマーク
-        yearGroup.append("line")
-        .attr("x1", -5)
-        .attr("y1", 0)
-        .attr("x2", 5)
-        .attr("y2", 0)
-        .attr("stroke", "#A0AEC0")
-        .attr("stroke-width", 1);
+        // タイムラインの開始と終了を取得
+        const minYear = this.years[0];
+        const maxYear = this.years[this.years.length - 1];
         
-        // 年表示
-        yearGroup.append("text")
-        .attr("x", -15)
-        .attr("y", 4)
-        .attr("text-anchor", "end")
-        .attr("font-size", "10px")
-        .attr("fill", "#4A5568")
-        .text(year);
+        // タイムラインの軸を描画
+        timelineGroup.append("line")
+            .attr("x1", 0)
+            .attr("y1", timelineScale(minYear))
+            .attr("x2", 0)
+            .attr("y2", timelineScale(maxYear))
+            .attr("stroke", "#CBD5E0")
+            .attr("stroke-width", 2);
         
-        // 横方向の薄い線
-        yearGroup.append("line")
-        .attr("x1", 0)
-        .attr("y1", 0)
-        .attr("x2", this.dimensions.width)
-        .attr("y2", 0)
-        .attr("stroke", "#EDF2F7")
-        .attr("stroke-width", 1)
-        .attr("stroke-dasharray", "2,2");
-    });
+        // 年のマークと数字、横線を描画
+        this.years.forEach(year => {
+            const yearGroup = timelineGroup.append("g")
+            .attr("transform", `translate(0, ${timelineScale(year)})`);
+            
+            // 年のマーク
+            yearGroup.append("line")
+            .attr("x1", -5)
+            .attr("y1", 0)
+            .attr("x2", 5)
+            .attr("y2", 0)
+            .attr("stroke", "#A0AEC0")
+            .attr("stroke-width", 1);
+            
+            // 年表示
+            yearGroup.append("text")
+            .attr("x", -15)
+            .attr("y", 4)
+            .attr("text-anchor", "end")
+            .attr("font-size", "10px")
+            .attr("fill", "#4A5568")
+            .text(year);
+            
+            // 横方向の薄い線
+            yearGroup.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", this.dimensions.width)
+            .attr("y2", 0)
+            .attr("stroke", "#EDF2F7")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", "2,2");
+        });
     }
     
     // ノードとリンク描画
@@ -709,17 +710,6 @@ class RelationshipMap {
                     .text(line);
             }
         });
-
-    // 人物ノードにカテゴリを小さく表示
-    node.filter(d => d.type === '人物')
-    .append("text")
-    .text(d => d.category)
-    .attr("dy", "1em")
-    .attr("text-anchor", "middle")
-    .attr("font-size", "8px")
-    .attr("fill", "#fff")
-    .attr("opacity", 0.8)
-    .attr("pointer-events", "none");
 
     // 論考・書籍・組織ノードに年を小さく表示
     node.filter(d => d.year && d.type !== '人物')
