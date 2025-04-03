@@ -444,7 +444,7 @@ class RelationshipMap {
             yearGroup.append("line")
             .attr("x1", -5)
             .attr("y1", 0)
-            .attr("x2", 1000) // 右側に長い線を描画
+            .attr("x2", 100) // 右側に長い線を描画
             .attr("y2", 0)
             .attr("stroke", "#A0AEC0")
             .attr("stroke-width", 1);
@@ -454,7 +454,7 @@ class RelationshipMap {
             .attr("x", -15)
             .attr("y", 4)
             .attr("text-anchor", "end")
-            .attr("font-size", "10px")
+            .attr("font-size", "15px")
             .attr("fill", "#4A5568")
             .text(year);
             
@@ -465,7 +465,7 @@ class RelationshipMap {
             .attr("x2", this.dimensions.width)
             .attr("y2", 0)
             .attr("stroke", "#EDF2F7")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 0.5)
             .attr("stroke-dasharray", "2,2");
         });
     }
@@ -493,9 +493,9 @@ class RelationshipMap {
         .force("x", d3.forceX().x(d => {
         // 人物ノードは中央に、それ以外は左右に分ける
         if (d.type === '人物') {
-            return 150; // 人物ノードは左寄りに
+            return 50; // 人物ノードは左寄りに
         } else {
-            return 350; // 組織/書籍/論考は右寄りに
+            return 250; // 組織/書籍/論考は右寄りに
         }
         }).strength(0.3))
         .force("y", d3.forceY().y(d => {
