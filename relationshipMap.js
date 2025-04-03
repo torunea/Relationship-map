@@ -114,20 +114,20 @@ class RelationshipMap {
     initializeEventListeners() {
         // 検索入力
         if (this.searchInput) {
-        this.searchInput.addEventListener('input', () => {
-            this.searchFilter = this.searchInput.value;
-            this.render();
-        });
+            this.searchInput.addEventListener('input', () => {
+                this.searchFilter = this.searchInput.value;
+                this.render();
+            });
         }
         
         // 検索モード変更
         if (this.searchModeSelect) {
-        this.searchModeSelect.addEventListener('change', () => {
-            this.searchMode = this.searchModeSelect.value;
-            this.render();
-        });
+            this.searchModeSelect.addEventListener('change', () => {
+                this.searchMode = this.searchModeSelect.value;
+                this.render();
+            });
         }
-
+        
         // リセットボタン
         if (this.resetFilterButton = document.getElementById('reset-filter')) {
             this.resetFilterButton.addEventListener('click', this.resetFilters.bind(this));
@@ -135,23 +135,23 @@ class RelationshipMap {
         
         // ズームコントロール
         if (this.zoomInButton) {
-        this.zoomInButton.addEventListener('click', this.handleZoomIn.bind(this));
+            this.zoomInButton.addEventListener('click', this.handleZoomIn.bind(this));
         }
         
         if (this.zoomOutButton) {
-        this.zoomOutButton.addEventListener('click', this.handleZoomOut.bind(this));
+            this.zoomOutButton.addEventListener('click', this.handleZoomOut.bind(this));
         }
         
         if (this.zoomResetButton) {
-        this.zoomResetButton.addEventListener('click', this.handleZoomReset.bind(this));
+            this.zoomResetButton.addEventListener('click', this.handleZoomReset.bind(this));
         }
         
         // ウィンドウリサイズ
         window.addEventListener('resize', () => {
-        this.updateMapSize();
-        this.render();
+            this.updateMapSize();
+            this.render();
         });
-
+        
         // SVGのマウスホイールイベント処理
         if (this.svg && this.svg.node()) {
             this.svg.node().addEventListener('wheel', (event) => {
@@ -216,102 +216,108 @@ class RelationshipMap {
     
     // ノードフィルタリング
     filterNodes() {
-    // 1. カテゴリによるフィルタリング
-    let filteredNodes = this.nodes.filter(node => {
-        if (node.type === '人物') {
-        return this.selectedCategories[node.category];
-        }
-        return true; // 人物以外はそのまま表示
-    });
-    
-    // 2. 検索語によるフィルタリング
-    if (this.searchFilter) {
-        // 複数のキーワードを分割
-        const keywords = this.searchFilter.toLowerCase().split(/\s+/).filter(k => k.length > 0);
-        
-        if (keywords.length > 0) {
-        // 名前やタグに検索語が含まれるノードを見つける
-        const matchingNodeIds = new Set();
-        
-        filteredNodes.forEach(node => {
-            // 検索対象のテキスト
-            const searchTexts = [
-            node.name.toLowerCase(),
-            ...(node.tags ? node.tags.map(tag => tag.toLowerCase()) : []),
-            node.description ? node.description.toLowerCase() : ''
-            ];
-            
-            let isMatch = false;
-            
-            if (this.searchMode === 'OR') {
-            // ORモード: いずれかのキーワードが含まれていればマッチ
-            isMatch = keywords.some(keyword => 
-                searchTexts.some(text => text.includes(keyword))
-            );
-            } else {
-            // ANDモード: すべてのキーワードが含まれていればマッチ
-            isMatch = keywords.every(keyword => 
-                searchTexts.some(text => text.includes(keyword))
-            );
+        // 1. カテゴリによるフィルタリング
+        let filteredNodes = this.nodes.filter(node => {
+            if (node.type === '人物') {
+            return this.selectedCategories[node.category];
             }
+            return true; // 人物以外はそのまま表示
+        });
+        
+        // 2. 検索語によるフィルタリング
+        if (this.searchFilter) {
+            // 複数のキーワードを分割
+            const keywords = this.searchFilter.toLowerCase().split(/\s+/).filter(k => k.length > 0);
             
-            if (isMatch) {
-            matchingNodeIds.add(node.id);
+            if (keywords.length > 0) {
+            // 名前やタグに検索語が含まれるノードを見つける
+            const matchingNodeIds = new Set();
+            
+            filteredNodes.forEach(node => {
+                // 検索対象のテキスト
+                const searchTexts = [
+                node.name.toLowerCase(),
+                ...(node.tags ? node.tags.map(tag => tag.toLowerCase()) : []),
+                node.description ? node.description.toLowerCase() : ''
+                ];
+                
+                let isMatch = false;
+                
+                if (this.searchMode === 'OR') {
+                // ORモード: いずれかのキーワードが含まれていればマッチ
+                isMatch = keywords.some(keyword => 
+                    searchTexts.some(text => text.includes(keyword))
+                );
+                } else {
+                // ANDモード: すべてのキーワードが含まれていればマッチ
+                isMatch = keywords.every(keyword => 
+                    searchTexts.some(text => text.includes(keyword))
+                );
+                }
+                
+                if (isMatch) {
+                matchingNodeIds.add(node.id);
+                }
+            });
+            
+            // 検索にマッチしないノードを除外
+            if (matchingNodeIds.size > 0) {
+                filteredNodes = filteredNodes.filter(node => matchingNodeIds.has(node.id));
+            }
+            }
+        }
+        
+        // 3. フィルターされたノードに接続されている他のノードを取得
+        const nodeIdsToInclude = new Set(filteredNodes.map(node => node.id));
+        const additionalNodeIds = new Set();
+        
+        // リンクを確認して、フィルタリングされたノードに接続されている他のノードを取得
+        this.links.forEach(link => {
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            
+            if (nodeIdsToInclude.has(sourceId) && !nodeIdsToInclude.has(targetId)) {
+            // ターゲットが人物であるか確認し、カテゴリフィルタをチェック
+            const targetNode = this.nodes.find(n => n.id === targetId);
+            if (targetNode && (targetNode.type !== '人物' || this.selectedCategories[targetNode.category])) {
+                additionalNodeIds.add(targetId);
+            }
+            } else if (nodeIdsToInclude.has(targetId) && !nodeIdsToInclude.has(sourceId)) {
+            // ソースが人物であるか確認し、カテゴリフィルタをチェック
+            const sourceNode = this.nodes.find(n => n.id === sourceId);
+            if (sourceNode && (sourceNode.type !== '人物' || this.selectedCategories[sourceNode.category])) {
+                additionalNodeIds.add(sourceId);
+            }
             }
         });
         
-        // 検索にマッチしないノードを除外
-        if (matchingNodeIds.size > 0) {
-            filteredNodes = filteredNodes.filter(node => matchingNodeIds.has(node.id));
-        }
-        }
-    }
-    
-    // 3. フィルタリングされたノードに接続されている他のノードを取得
-    const nodeIdsToInclude = new Set(filteredNodes.map(node => node.id));
-    const additionalNodeIds = new Set();
-    
-    // リンクを確認して、フィルタリングされたノードに接続されている他のノードを取得
-    this.links.forEach(link => {
-        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        // 追加ノードを含めた最終的なノードリスト
+        additionalNodeIds.forEach(id => {
+            if (!nodeIdsToInclude.has(id)) {
+            const nodeToAdd = this.nodes.find(n => n.id === id);
+            if (nodeToAdd) {
+                filteredNodes.push(nodeToAdd);
+                nodeIdsToInclude.add(id);
+            }
+            }
+        });
         
-        if (nodeIdsToInclude.has(sourceId) && !nodeIdsToInclude.has(targetId)) {
-        // ターゲットが人物であるか確認し、カテゴリフィルタをチェック
-        const targetNode = this.nodes.find(n => n.id === targetId);
-        if (targetNode && (targetNode.type !== '人物' || this.selectedCategories[targetNode.category])) {
-            additionalNodeIds.add(targetId);
-        }
-        } else if (nodeIdsToInclude.has(targetId) && !nodeIdsToInclude.has(sourceId)) {
-        // ソースが人物であるか確認し、カテゴリフィルタをチェック
-        const sourceNode = this.nodes.find(n => n.id === sourceId);
-        if (sourceNode && (sourceNode.type !== '人物' || this.selectedCategories[sourceNode.category])) {
-            additionalNodeIds.add(sourceId);
-        }
-        }
-    });
-    
-    // 追加ノードを含めた最終的なノードリスト
-    additionalNodeIds.forEach(id => {
-        if (!nodeIdsToInclude.has(id)) {
-        const nodeToAdd = this.nodes.find(n => n.id === id);
-        if (nodeToAdd) {
-            filteredNodes.push(nodeToAdd);
-            nodeIdsToInclude.add(id);
-        }
-        }
-    });
-    
-    // リンクをフィルタリング
-    const filteredLinks = this.links.filter(link => {
-        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        // リンクをフィルタリング
+        const filteredLinks = this.links.filter(link => {
+            const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+            const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+            
+            return nodeIdsToInclude.has(sourceId) && nodeIdsToInclude.has(targetId);
+        });
         
-        return nodeIdsToInclude.has(sourceId) && nodeIdsToInclude.has(targetId);
-    });
-    
-    this.filteredNodes = filteredNodes;
-    this.filteredLinks = filteredLinks;
+        this.filteredNodes = filteredNodes;
+        this.filteredLinks = filteredLinks;
+        
+        // フィルターが適用されているかを判断
+        const isFiltered = this.searchFilter !== '';
+        
+        // タイムラインの表示/非表示を設定
+        this.showTimeline = !isFiltered;
     }
     
     // タイムラインスケール作成
@@ -350,23 +356,26 @@ class RelationshipMap {
     }
     
     // ズーム機能セットアップ
-    // ズーム機能セットアップ
+    // 初期表示位置を中央に調整
     setupZoom(timelineScale) {
-        // ズームとパン機能を追加
+        // ズームとパン機能を追加 - マウスホイールは縦スクロールのみに
         this.zoom = d3.zoom()
-            .scaleExtent([0.3, 2]) // ズームの範囲
-            .on("zoom", (event) => {
-                // ズームレベルを10%刻みに丸める
-                const rawScale = event.transform.k;
-                const roundedScale = Math.round(rawScale * 10) / 10;
-                
-                // ズームレベルを保存
-                this.zoomLevel = roundedScale;
-                this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
-                
-                // コンテナの変形を適用
-                this.container.attr("transform", event.transform);
-            });
+        .scaleExtent([0.3, 2])
+        .on("zoom", (event) => {
+            // ズームレベルを10%刻みに丸める
+            const rawScale = event.transform.k;
+            const roundedScale = Math.round(rawScale * 10) / 10;
+            
+            // ズームレベルを保存
+            this.zoomLevel = roundedScale;
+            this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+            
+            // x方向のズームは無効化し、y方向のみスクロール可能に
+            const newTransform = d3.zoomIdentity
+            .translate(event.transform.x, event.transform.y)
+            .scale(roundedScale);
+            this.container.attr("transform", newTransform);
+        });
         
         // マウスホイールイベントを処理するよう設定
         this.svg.call(this.zoom)
@@ -389,20 +398,28 @@ class RelationshipMap {
                 this.svg.property("__zoom", newTransform);
             });
         
-        // 初期表示位置
+        // 初期表示位置の計算 - 中央に配置
+        const initialScale = 0.8;
+        const centerX = this.dimensions.width / 2;
+        const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
+        const centerY = this.dimensions.height / 2 - timelineCenter / 2;
+        
         this.svg.call(
             this.zoom.transform, 
-            d3.zoomIdentity.translate(this.dimensions.width / 2, 0).scale(0.8)
+            d3.zoomIdentity.translate(centerX, centerY).scale(initialScale)
         );
         
-        this.zoomLevel = 0.8;
-        this.zoomLevelEl.textContent = '80%';
+        this.zoomLevel = initialScale;
+        this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
     }
     
     // タイムライン描画
     renderTimeline(timelineScale) {
-    const timelineGroup = this.container.append("g")
-        .attr("class", "timeline");
+        // フィルター適用時は表示しない
+        if (this.showTimeline === false) return;
+        
+        const timelineGroup = this.container.append("g")
+            .attr("class", "timeline");
     
     // タイムラインの開始と終了を取得
     const minYear = this.years[0];
@@ -563,17 +580,18 @@ class RelationshipMap {
 
     // 人物以外のノードは四角形で描画 - 無彩色に
     const rectWidth = 120; // 四角形の幅を固定
+    const padding = 10; // パディングを追加
     node.filter(d => d.type !== '人物')
-    .append("rect")
-    .attr("width", rectWidth)
-    .attr("height", 60) // 2行分のテキストが入るように高さを増やす
-    .attr("x", -rectWidth / 2) // 中央揃え
-    .attr("y", -30)
-    .attr("rx", 5) // 角を丸くする
-    .attr("ry", 5)
-    .attr("fill", "#E2E8F0") // 無彩色に統一
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1);
+        .append("rect")
+        .attr("width", rectWidth + padding * 2) // パディングを考慮
+        .attr("height", 60 + padding * 2) // パディングを考慮
+        .attr("x", -(rectWidth + padding * 2) / 2) // 中央揃え
+        .attr("y", -(30 + padding))
+        .attr("rx", 5) // 角を丸くする
+        .attr("ry", 5)
+        .attr("fill", "#E2E8F0") // 無彩色に統一
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1);
 
     // 人物以外のノードにタイプラベルを追加
     node.filter(d => d.type !== '人物')
@@ -604,13 +622,24 @@ class RelationshipMap {
 
     // ノードラベル描画 - 人物用
     node.filter(d => d.type === '人物')
-    .append("text")
-    .text(d => d.name)
-    .attr("dy", "-0.2em")
-    .attr("text-anchor", "middle")
-    .attr("font-size", "11px")
-    .attr("fill", "#fff")
-    .attr("pointer-events", "none");
+        .append("text")
+        .text(d => d.name)
+        .attr("dy", "-0.5em") // 調整
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .attr("fill", "#fff")
+        .attr("pointer-events", "none");
+
+    // 人物ノードにカテゴリを小さく表示
+    node.filter(d => d.type === '人物')
+        .append("text")
+        .text(d => d.category)
+        .attr("dy", "0.7em") // 調整
+        .attr("text-anchor", "middle")
+        .attr("font-size", "8px")
+        .attr("fill", "#fff")
+        .attr("opacity", 0.8)
+        .attr("pointer-events", "none");
 
     // ノードラベル描画 - 人物以外用（テキスト折り返し機能付き）
     node.filter(d => d.type !== '人物')
@@ -718,9 +747,17 @@ class RelationshipMap {
     
     // ホバー情報表示
     renderHoverInfo(node, pageX, pageY) {
-    this.hoverInfoEl.style.display = 'block';
-    this.hoverInfoEl.style.left = `${pageX + 10}px`;
-    this.hoverInfoEl.style.top = `${pageY + 10}px`;
+        this.hoverInfoEl.style.display = 'block';
+        
+        // ノードの位置からホバー情報の位置を計算
+        // SVG座標からページ座標への変換
+        const svgRect = this.svg.node().getBoundingClientRect();
+        const nodeX = node.x * this.zoomLevel + svgRect.left;
+        const nodeY = node.y * this.zoomLevel + svgRect.top;
+        
+        // ノードの右側に表示
+        this.hoverInfoEl.style.left = `${nodeX + node.radius + 10}px`;
+        this.hoverInfoEl.style.top = `${nodeY - 20}px`;
     
     let html = `
         <div class="hover-info-name">${node.name}</div>
@@ -745,23 +782,35 @@ class RelationshipMap {
     
     // ノード詳細表示
     renderNodeDetail(node) {
-    // 先に両方の詳細パネルを非表示に
-    this.personDetailEl.style.display = 'none';
-    this.nodeDetailEl.style.display = 'none';
-    
-    if (node.type === '人物') {
-        // 人物詳細パネル
-        let html = `
-        <h3>${node.name}</h3>
-        <p><span class="font-medium">分類:</span> ${node.category}</p>
-        `;
+        // 先に両方の詳細パネルを非表示に
+        this.personDetailEl.style.display = 'none';
+        this.nodeDetailEl.style.display = 'none';
+        
+        if (node.type === '人物') {
+            // カテゴリーに応じた色を取得
+            let categoryColor;
+            switch (node.category) {
+                case '建築家': categoryColor = '#4299E1'; break;
+                case '写真家': categoryColor = '#F6AD55'; break;
+                case 'エンジニア': categoryColor = '#48BB78'; break;
+                case 'デザイナー': categoryColor = '#F687B3'; break;
+                default: categoryColor = '#A0AEC0';
+            }
+            
+            // 人物詳細パネル
+            let html = `
+            <h3>${node.name}</h3>
+            <p><span class="font-medium category-indicator" style="display: inline-flex; align-items: center;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${categoryColor}; margin-right: 5px;"></span>
+            分類: ${node.category}</span></p>
+            `;
         
         if (node.tags && node.tags.length > 0) {
-        html += '<div><span class="font-medium">タグ:</span><div class="tag-list">';
-        node.tags.forEach(tag => {
-            html += `<span class="tag">${tag}</span>`;
-        });
-        html += '</div></div>';
+            html += '<div><span class="font-medium">タグ:</span><div class="tag-list">';
+            node.tags.forEach(tag => {
+                html += `<span class="tag">${tag}</span>`;
+            });
+            html += '</div></div>';
         }
         
         html += `<button class="filter-button" onclick="map.filterByNodeName('${node.name}')">このノードでフィルター</button>`;
