@@ -456,7 +456,17 @@ class RelationshipMap {
     this.simulation = d3.forceSimulation(this.filteredNodes)
         .force("link", d3.forceLink(this.filteredLinks).id(d => d.id).distance(150))
         .force("charge", d3.forceManyBody().strength(-300))
-        .force("collision", d3.forceCollide().radius(d => d.radius + 20))
+
+        // シミュレーション設定の衝突検出部分
+        .force("collision", d3.forceCollide().radius(d => {
+            // 人物ノードとそれ以外で半径を変える
+            if (d.type === '人物') {
+                return d.radius + 20;
+            } else {
+                return 70; // 四角形の対角線の半分くらいの値
+            }
+        }))
+        
         .force("x", d3.forceX().x(d => {
         // 人物ノードは中央に、それ以外は左右に分ける
         if (d.type === '人物') {
@@ -537,23 +547,87 @@ class RelationshipMap {
         this.renderNodeDetail(d);
         event.stopPropagation();
         });
-    
-    // ノード円描画
-    node.append("circle")
+
+    // 人物ノードは円で描画
+    node.filter(d => d.type === '人物')
+        .append("circle")
         .attr("r", d => d.radius)
         .attr("fill", d => d.color)
         .attr("stroke", "#fff")
         .attr("stroke-width", 1);
-    
-    // ノードラベル描画
-    node.append("text")
+
+    // 人物以外のノードは四角形で描画
+    const rectWidth = 120; // 四角形の幅を固定
+    node.filter(d => d.type !== '人物')
+        .append("rect")
+        .attr("width", rectWidth)
+        .attr("height", 60) // 2行分のテキストが入るように高さを増やす
+        .attr("x", -rectWidth / 2) // 中央揃え
+        .attr("y", -30)
+        .attr("rx", 5) // 角を丸くする
+        .attr("ry", 5)
+        .attr("fill", d => d.color)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1);
+
+    // ノードラベル描画 - 人物用
+    node.filter(d => d.type === '人物')
+        .append("text")
         .text(d => d.name)
-        .attr("dy", d => d.type === '人物' ? "-0.2em" : "0.35em")
+        .attr("dy", "-0.2em")
         .attr("text-anchor", "middle")
         .attr("font-size", "11px")
         .attr("fill", "#fff")
         .attr("pointer-events", "none");
-    
+
+    // ノードラベル描画 - 人物以外用（テキスト折り返し機能付き）
+    node.filter(d => d.type !== '人物')
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .attr("fill", "#fff")
+        .attr("pointer-events", "none")
+        .attr("dy", "-0.5em")
+        .each(function(d) {
+            const text = d3.select(this);
+            const words = d.name.split(/\s+/);
+            let line = "";
+            let lineNumber = 0;
+            const lineHeight = 1.1; // ems
+            const width = rectWidth - 20; // 余白を考慮
+            
+            // 1行目
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + " ";
+                // 行の幅をテスト
+                if (testLine.length * 6 > width && i > 0) { // 大まかな文字幅の見積もり
+                    // 1行目を追加
+                    text.append("tspan")
+                        .attr("x", 0)
+                        .attr("dy", 0)
+                        .text(line.trim());
+                    
+                    line = words[i] + " ";
+                    lineNumber++;
+                    
+                    // 最大2行まで
+                    if (lineNumber >= 1) {
+                        break;
+                    }
+                } else {
+                    line = testLine;
+                }
+            }
+            
+            // 2行目（または1行目が途中で終わった場合）
+            if (line.trim()) {
+                text.append("tspan")
+                    .attr("x", 0)
+                    .attr("dy", lineNumber ? lineHeight + "em" : 0)
+                    .text(line.trim() + (lineNumber && words.length > i ? "..." : ""));
+            }
+        });
+
     // 人物ノードにカテゴリを小さく表示
     node.filter(d => d.type === '人物')
         .append("text")
@@ -564,18 +638,18 @@ class RelationshipMap {
         .attr("fill", "#fff")
         .attr("opacity", 0.8)
         .attr("pointer-events", "none");
-    
+
     // 論考・書籍・組織ノードに年を小さく表示
     node.filter(d => d.year && d.type !== '人物')
         .append("text")
         .text(d => d.year)
-        .attr("dy", "1.5em")
+        .attr("dy", "2em")
         .attr("text-anchor", "middle")
         .attr("font-size", "9px")
         .attr("fill", "#fff")
         .attr("font-weight", "bold")
         .attr("pointer-events", "none");
-    
+
     // SVGの外側をクリックした時に選択を解除
     this.svg.on("click", () => {
         this.selectedNode = null;
