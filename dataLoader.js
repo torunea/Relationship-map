@@ -1,107 +1,128 @@
 // dataLoader.js
 class DataLoader {
     constructor() {
-      this.spreadsheetId = null;
-      this.apiKey = null;
+    this.spreadsheetId = null;
     }
-  
+
     // 設定を初期化
-    initialize(spreadsheetId, apiKey) {
-      this.spreadsheetId = spreadsheetId;
-      this.apiKey = apiKey;
+    initialize(spreadsheetId) {
+    this.spreadsheetId = spreadsheetId;
     }
-  
-    // Google Sheets APIからデータを読み込む
+
+    // ウェブに公開されたスプレッドシートからデータを読み込む
     async loadFromSpreadsheet() {
-      if (!this.spreadsheetId || !this.apiKey) {
-        console.error('スプレッドシートIDまたはAPIキーが設定されていません');
+    if (!this.spreadsheetId) {
+        console.error('スプレッドシートIDが設定されていません');
         return null;
-      }
-  
-      try {
+    }
+
+    try {
         // 人物データのシート読み込み
         const peopleResponse = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/人物?key=${this.apiKey}`
+        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=人物`
         );
-        const peopleData = await peopleResponse.json();
-  
+        const peopleCSV = await peopleResponse.text();
+        const peopleData = this.parseCSV(peopleCSV);
+
         // 論考・書籍データのシート読み込み
         const worksResponse = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/論考書籍?key=${this.apiKey}`
+        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=論考書籍`
         );
-        const worksData = await worksResponse.json();
-  
+        const worksCSV = await worksResponse.text();
+        const worksData = this.parseCSV(worksCSV);
+
         // 組織データのシート読み込み
         const orgsResponse = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/組織?key=${this.apiKey}`
+        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=組織`
         );
-        const orgsData = await orgsResponse.json();
-  
+        const orgsCSV = await orgsResponse.text();
+        const orgsData = this.parseCSV(orgsCSV);
+
         // データの整形
-        return this.formatData(peopleData.values, worksData.values, orgsData.values);
-      } catch (error) {
+        return {
+        people: this.mapPeopleData(peopleData),
+        works: this.mapWorksData(worksData),
+        organizations: this.mapOrgsData(orgsData)
+        };
+    } catch (error) {
         console.error('スプレッドシートからのデータ読み込みエラー:', error);
         return null;
-      }
     }
-  
-    // 読み込んだデータを整形する
-    formatData(peopleValues, worksValues, orgsValues) {
-      // ヘッダー行を除外してデータを処理
-      const people = this.processSheetData(peopleValues, this.peopleMapper);
-      const works = this.processSheetData(worksValues, this.worksMapper);
-      const organizations = this.processSheetData(orgsValues, this.orgMapper);
-  
-      return { people, works, organizations };
     }
-  
-    // シートデータを処理する共通関数
-    processSheetData(values, mapperFunc) {
-      if (!values || values.length < 2) return [];
-      
-      const headers = values[0];
-      return values.slice(1).map((row, index) => {
-        const item = {};
+
+    // CSVデータをパースする
+    parseCSV(csvText) {
+    // シンプルなCSVパーサー
+    const lines = csvText.split('\n');
+    const headers = this.parseCSVLine(lines[0]);
+    
+    return lines.slice(1)
+        .filter(line => line.trim() !== '')
+        .map((line, index) => {
+        const values = this.parseCSVLine(line);
+        const item = { id: index + 1 };
+        
         headers.forEach((header, i) => {
-          item[header] = i < row.length ? row[i] : '';
+            item[header.trim()] = i < values.length ? values[i].trim() : '';
         });
-        item.id = index + 1; // IDを追加
-        return mapperFunc(item);
-      });
+        
+        return item;
+        });
     }
-  
+
+    // CSVの1行をパースする（カンマ区切りと引用符を処理）
+    parseCSVLine(line) {
+    const result = [];
+    let startPos = 0;
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') {
+        inQuotes = !inQuotes;
+        } else if (line[i] === ',' && !inQuotes) {
+        result.push(line.substring(startPos, i).replace(/^"|"$/g, ''));
+        startPos = i + 1;
+        }
+    }
+    
+    // 最後のフィールドを追加
+    result.push(line.substring(startPos).replace(/^"|"$/g, ''));
+    
+    return result;
+    }
+
     // データマッパー関数
-    peopleMapper(item) {
-      return {
+    mapPeopleData(data) {
+    return data.map(item => ({
         id: item.id,
         name: item.name || `人物${item.id}`,
         category: item.category || '',
         tags: item.tags || ''
-      };
+    }));
     }
-  
-    worksMapper(item) {
-      return {
+
+    mapWorksData(data) {
+    return data.map(item => ({
         id: item.id,
         name: item.name || `作品${item.id}`,
         type: item.type || '論考',
         year: item.year ? parseInt(item.year, 10) : null,
         tags: item.tags || '',
         description: item.description || ''
-      };
+    }));
     }
-  
-    orgMapper(item) {
-      return {
+
+    mapOrgsData(data) {
+    return data.map(item => ({
         id: item.id,
         name: item.name || `組織${item.id}`,
         type: '組織',
         year: item.year ? parseInt(item.year, 10) : null,
         tags: item.tags || '',
         description: item.description || ''
-      };
+    }));
     }
-  }
-  
-  // グローバルインスタンス
-  const dataLoader = new DataLoader();
+}
+
+// グローバルインスタンス
+const dataLoader = new DataLoader();
