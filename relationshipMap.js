@@ -1,55 +1,114 @@
 // リレーションシップマップクラス
 class RelationshipMap {
     constructor() {
-      // DOM要素
-      this.svg = d3.select('#relationship-map');
-      this.container = null;
-      this.searchInput = document.getElementById('search-input');
-      this.searchModeSelect = document.getElementById('search-mode');
-      this.categoryFiltersEl = document.getElementById('category-filters');
-      this.zoomInButton = document.getElementById('zoom-in');
-      this.zoomOutButton = document.getElementById('zoom-out');
-      this.zoomResetButton = document.getElementById('zoom-reset');
-      this.zoomLevelEl = document.getElementById('zoom-level');
-      this.hoverInfoEl = document.getElementById('hover-info');
-      this.personDetailEl = document.getElementById('person-detail');
-      this.nodeDetailEl = document.getElementById('node-detail');
+        // DOM要素
+        this.svg = d3.select('#relationship-map');
+        this.container = null;
+        this.searchInput = document.getElementById('search-input');
+        this.searchModeSelect = document.getElementById('search-mode');
+        this.categoryFiltersEl = document.getElementById('category-filters');
+        this.zoomInButton = document.getElementById('zoom-in');
+        this.zoomOutButton = document.getElementById('zoom-out');
+        this.zoomResetButton = document.getElementById('zoom-reset');
+        this.zoomLevelEl = document.getElementById('zoom-level');
+        this.hoverInfoEl = document.getElementById('hover-info');
+        this.personDetailEl = document.getElementById('person-detail');
+        this.nodeDetailEl = document.getElementById('node-detail');
+        this.loadingIndicator = document.getElementById('loading-indicator');
+        
+        // 状態
+        this.nodes = [];
+        this.links = [];
+        this.categories = [];
+        this.years = [];
+        this.timelineHeight = 600;
+        this.selectedCategories = {};
+        this.searchFilter = '';
+        this.searchMode = 'OR';
+        this.filteredNodes = [];
+        this.filteredLinks = [];
+        this.hoveredNode = null;
+        this.selectedNode = null;
+        this.zoomLevel = 1;
+        this.simulation = null;
+        this.zoom = null;
+        
+        // ウィンドウサイズ
+        this.dimensions = {
+          width: window.innerWidth - 40,
+          height: window.innerHeight - 100
+        };
+        
+        // 初期化
+        this.initializeEventListeners();
+        this.loadData();
+      }
       
-      // 状態
-      this.processedData = processData();
-      this.nodes = this.processedData.nodes;
-      this.links = this.processedData.links;
-      this.categories = this.processedData.categories;
-      this.years = this.processedData.years;
-      this.timelineHeight = this.processedData.timelineHeight;
-      this.selectedCategories = {};
-      this.searchFilter = '';
-      this.searchMode = 'OR';
-      this.filteredNodes = [];
-      this.filteredLinks = [];
-      this.hoveredNode = null;
-      this.selectedNode = null;
-      this.zoomLevel = 1;
-      this.simulation = null;
-      this.zoom = null;
+      // データ読み込み
+      async loadData() {
+        this.showLoading();
+        
+        try {
+          if (CONFIG.useDefaultData) {
+            // デフォルトデータを使用
+            const processedData = processData();
+            this.setData(processedData);
+          } else {
+            // Googleスプレッドシートからデータ読み込み
+            dataLoader.initialize(CONFIG.spreadsheet.id, CONFIG.spreadsheet.apiKey);
+            const data = await dataLoader.loadFromSpreadsheet();
+            
+            if (data) {
+              const processedData = processData(data);
+              this.setData(processedData);
+            } else {
+              throw new Error('データの読み込みに失敗しました');
+            }
+          }
+        } catch (error) {
+          console.error('データ読み込みエラー:', error);
+          this.showError('データの読み込みに失敗しました');
+        } finally {
+          this.hideLoading();
+        }
+      }
       
-      // ウィンドウサイズ
-      this.dimensions = {
-        width: window.innerWidth - 40, // パディングを考慮
-        height: window.innerHeight - 100 // コントロールパネルとパディングを考慮
-      };
+      // データをセット
+      setData(processedData) {
+        this.nodes = processedData.nodes;
+        this.links = processedData.links;
+        this.categories = processedData.categories;
+        this.years = processedData.years;
+        this.timelineHeight = processedData.timelineHeight;
+        
+        // カテゴリフィルタ初期化
+        this.categories.forEach(category => {
+          this.selectedCategories[category] = true;
+        });
+        
+        this.renderCategoryFilters();
+        this.updateMapSize();
+        this.render();
+      }
       
-      // カテゴリフィルタ初期化
-      this.categories.forEach(category => {
-        this.selectedCategories[category] = true;
-      });
+      // ローディング表示
+      showLoading() {
+        if (this.loadingIndicator) {
+          this.loadingIndicator.style.display = 'flex';
+        }
+      }
       
-      // 初期化
-      this.initializeEventListeners();
-      this.renderCategoryFilters();
-      this.updateMapSize();
-      this.render();
-    }
+      // ローディング非表示
+      hideLoading() {
+        if (this.loadingIndicator) {
+          this.loadingIndicator.style.display = 'none';
+        }
+      }
+      
+      // エラー表示
+      showError(message) {
+        alert(message);
+      }
     
     // イベントリスナー初期化
     initializeEventListeners() {
@@ -266,22 +325,23 @@ class RelationshipMap {
           this.container.attr("transform", newTransform);
         })
         .filter(event => {
-          // マウスホイールイベントの処理方法を変更
-          if (event.type === 'wheel') {
-            // ctrlキーが押されていない場合のみスクロール処理
-            if (!event.ctrlKey) {
-              // Transform y位置のみを変更
+            // マウスホイールイベントの処理方法を変更
+            if (event.type === 'wheel') {
+              // マウスホイールイベントをキャプチャして独自処理
               const currentTransform = d3.zoomTransform(this.svg.node());
-              const newY = currentTransform.y - event.deltaY;
-              const newTransform = d3.zoomIdentity
-                .translate(currentTransform.x, newY)
-                .scale(currentTransform.k);
-              this.container.attr("transform", newTransform);
-              event.preventDefault(); // 通常のスクロール動作をキャンセル
-              return false; // ズーム動作は実行しない
+              const newY = currentTransform.y - event.deltaY * 0.5; // スクロール感度調整
+              
+              this.svg.call(
+                this.zoom.transform,
+                d3.zoomIdentity
+                  .translate(currentTransform.x, newY)
+                  .scale(currentTransform.k)
+              );
+              
+              event.preventDefault();
+              return false;
             }
-          }
-          return !event.ctrlKey && !event.button; // ctrlキーが押されていない通常のクリック/ドラッグのみ
+            return !event.button;
         });
       
       this.svg.call(this.zoom);

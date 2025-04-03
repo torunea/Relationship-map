@@ -3,151 +3,151 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-  }
-  
-  body {
+}
+
+body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #333;
     background-color: #f5f5f5;
     line-height: 1.5;
-  }
-  
-  .relationship-map-container {
+}
+
+.relationship-map-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
     padding: 1rem;
-  }
-  
-  /* コントロールパネル */
-  .control-panel {
+}
+
+/* コントロールパネル */
+.control-panel {
     background-color: white;
     padding: 0.75rem;
     margin-bottom: 0.5rem;
     border-radius: 0.25rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  }
-  
-  .control-panel .flex-wrap {
+}
+
+.control-panel .flex-wrap {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 1rem;
-  }
-  
-  /* 検索ボックス */
-  .search-box {
+}
+
+/* 検索ボックス */
+.search-box {
     display: flex;
     align-items: center;
-  }
-  
-  .search-input {
+}
+
+.search-input {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
     border: 1px solid #e2e8f0;
     border-radius: 0.25rem;
-  }
-  
-  .search-mode-select {
+}
+
+.search-mode-select {
     margin-left: 0.5rem;
     padding: 0.375rem 0.5rem;
     font-size: 0.875rem;
     border: 1px solid #e2e8f0;
     border-radius: 0.25rem;
     background-color: white;
-  }
-  
-  /* カテゴリフィルター */
-  .category-filters {
+}
+
+/* カテゴリフィルター */
+.category-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     font-size: 0.875rem;
-  }
-  
-  .category-filter-item {
+}
+
+.category-filter-item {
     display: flex;
     align-items: center;
     cursor: pointer;
-  }
-  
-  .category-filter-item input {
+}
+
+.category-filter-item input {
     margin-right: 0.25rem;
-  }
-  
-  /* 凡例 */
-  .legend {
+}
+
+/* 凡例 */
+.legend {
     display: flex;
     margin-left: auto;
     font-size: 0.75rem;
     color: #718096;
-  }
-  
-  .legend-item {
+}
+
+.legend-item {
     display: flex;
     align-items: center;
     margin-left: 0.25rem;
     margin-right: 0.25rem;
-  }
-  
-  .legend-color {
+}
+
+.legend-color {
     width: 0.75rem;
     height: 0.75rem;
     border-radius: 9999px;
     margin-right: 0.25rem;
-  }
-  
-  .person-color { background-color: #4299E1; }
-  .article-color { background-color: #F6AD55; }
-  .book-color { background-color: #F687B3; }
-  .org-color { background-color: #805AD5; }
-  
-  /* 線の情報 */
-  .line-info {
+}
+
+.person-color { background-color: #4299E1; }
+.article-color { background-color: #F6AD55; }
+.book-color { background-color: #F687B3; }
+.org-color { background-color: #805AD5; }
+
+/* 線の情報 */
+.line-info {
     display: flex;
     align-items: center;
     margin-top: 0.5rem;
     font-size: 0.75rem;
     color: #718096;
-  }
-  
-  .line-type {
+}
+
+.line-type {
     display: flex;
     align-items: center;
     margin-left: 0.5rem;
     margin-right: 0.5rem;
-  }
-  
-  .line-sample {
+}
+
+.line-sample {
     display: inline-block;
     width: 1.5rem;
     height: 1px;
     margin-right: 0.25rem;
-  }
-  
-  .mention-line { background-color: #E53E3E; }
-  
-  .help-text {
+}
+
+.mention-line { background-color: #E53E3E; }
+
+.help-text {
     margin-left: auto;
-  }
-  
-  /* マップコンテナ */
-  .map-container {
+}
+
+/* マップコンテナ */
+.map-container {
     position: relative;
     flex-grow: 1;
     background-color: white;
     border-radius: 0.25rem;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-  }
-  
-  #relationship-map {
+}
+
+#relationship-map {
     width: 100%;
     height: 100%;
-  }
-  
-  /* ズームコントロール */
-  .zoom-controls {
+}
+
+/* ズームコントロール */
+.zoom-controls {
     position: absolute;
     bottom: 1rem;
     right: 1rem;
@@ -157,33 +157,33 @@
     padding: 0.25rem;
     display: flex;
     flex-direction: column;
-  }
-  
-  .zoom-button {
+}
+
+.zoom-button {
     padding: 0.25rem;
     color: #4a5568;
     background: none;
     border: none;
     cursor: pointer;
     transition: color 0.2s;
-  }
-  
-  .zoom-button:hover {
+}
+
+.zoom-button:hover {
     color: #3182ce;
-  }
-  
-  .zoom-button:focus {
+}
+
+.zoom-button:focus {
     outline: none;
-  }
-  
-  .zoom-level {
+}
+
+.zoom-level {
     font-size: 0.75rem;
     text-align: center;
     margin: 0.25rem 0;
-  }
-  
-  /* ホバー情報 */
-  .hover-info {
+}
+
+/* ホバー情報 */
+.hover-info {
     position: absolute;
     background-color: white;
     padding: 0.5rem;
@@ -192,13 +192,13 @@
     font-size: 0.75rem;
     pointer-events: none;
     z-index: 10;
-  }
-  
-  .hover-info-name {
+}
+
+.hover-info-name {
     font-weight: bold;
-  }
-  
-  .hover-info-tag {
+}
+
+.hover-info-tag {
     display: inline-block;
     background-color: #f7fafc;
     color: #4a5568;
@@ -207,10 +207,10 @@
     margin-right: 0.25rem;
     margin-bottom: 0.25rem;
     font-size: 0.75rem;
-  }
-  
-  /* 人物詳細パネル */
-  .person-detail {
+}
+
+/* 人物詳細パネル */
+.person-detail {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
@@ -220,26 +220,26 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     max-width: 20rem;
     z-index: 5;
-  }
-  
-  .person-detail h3 {
+}
+
+.person-detail h3 {
     font-weight: bold;
     font-size: 1rem;
     margin-bottom: 0.25rem;
-  }
-  
-  .person-detail p {
+}
+
+.person-detail p {
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
-  }
-  
-  .person-detail .tag-list {
+}
+
+.person-detail .tag-list {
     display: flex;
     flex-wrap: wrap;
     margin-top: 0.25rem;
-  }
-  
-  .person-detail .tag {
+}
+
+.person-detail .tag {
     background-color: #f7fafc;
     color: #4a5568;
     padding: 0.125rem 0.5rem;
@@ -247,9 +247,9 @@
     margin-right: 0.25rem;
     margin-bottom: 0.25rem;
     font-size: 0.75rem;
-  }
-  
-  .person-detail .filter-button {
+}
+
+.person-detail .filter-button {
     margin-top: 0.5rem;
     font-size: 0.75rem;
     color: #3182ce;
@@ -257,10 +257,10 @@
     border: none;
     cursor: pointer;
     padding: 0;
-  }
-  
-  /* ノード詳細パネル（人物以外） */
-  .node-detail {
+}
+
+/* ノード詳細パネル（人物以外） */
+.node-detail {
     position: absolute;
     top: 0;
     right: 0;
@@ -271,9 +271,9 @@
     padding: 1rem;
     overflow-y: auto;
     z-index: 10;
-  }
-  
-  .node-detail-close {
+}
+
+.node-detail-close {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
@@ -282,105 +282,105 @@
     color: #a0aec0;
     cursor: pointer;
     font-size: 1rem;
-  }
-  
-  .node-detail-close:hover {
+}
+
+.node-detail-close:hover {
     color: #4a5568;
-  }
-  
-  .node-detail h2 {
+}
+
+.node-detail h2 {
     font-weight: bold;
     font-size: 1.125rem;
     margin-bottom: 0.75rem;
     padding-right: 1.5rem;
-  }
-  
-  .node-detail-section {
+}
+
+.node-detail-section {
     margin-bottom: 1rem;
-  }
-  
-  .node-detail-section-title {
+}
+
+.node-detail-section-title {
     font-weight: 500;
     font-size: 0.875rem;
     color: #718096;
     margin-bottom: 0.25rem;
-  }
-  
-  .node-detail-type {
+}
+
+.node-detail-type {
     display: flex;
     align-items: center;
-  }
-  
-  .node-detail-type-indicator {
+}
+
+.node-detail-type-indicator {
     width: 0.75rem;
     height: 0.75rem;
     border-radius: 9999px;
     margin-right: 0.5rem;
-  }
-  
-  .node-detail-year {
+}
+
+.node-detail-year {
     font-size: 0.875rem;
     margin-bottom: 0.25rem;
-  }
-  
-  .node-detail-description {
+}
+
+.node-detail-description {
     font-size: 0.875rem;
-  }
-  
-  .node-detail-tags {
+}
+
+.node-detail-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-  }
-  
-  .node-detail-tag {
+}
+
+.node-detail-tag {
     background-color: #f7fafc;
     color: #4a5568;
     padding: 0.125rem 0.5rem;
     border-radius: 0.25rem;
     font-size: 0.75rem;
     cursor: pointer;
-  }
-  
-  .node-detail-tag:hover {
+}
+
+.node-detail-tag:hover {
     background-color: #edf2f7;
-  }
-  
-  .related-people {
+}
+
+.related-people {
     margin-top: 0.5rem;
-  }
-  
-  .related-person {
+}
+
+.related-person {
     display: flex;
     align-items: center;
     padding: 0.25rem;
     border-radius: 0.25rem;
     cursor: pointer;
-  }
-  
-  .related-person:hover {
+}
+
+.related-person:hover {
     background-color: #f7fafc;
-  }
-  
-  .related-person-indicator {
+}
+
+.related-person-indicator {
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 9999px;
     background-color: #4299E1;
     margin-right: 0.5rem;
-  }
-  
-  .related-person-name {
+}
+
+.related-person-name {
     font-weight: 500;
     font-size: 0.875rem;
-  }
-  
-  .related-person-category {
+}
+
+.related-person-category {
     font-size: 0.75rem;
     color: #718096;
-  }
-  
-  .node-detail .filter-button {
+}
+
+.node-detail .filter-button {
     margin-top: 0.5rem;
     font-size: 0.75rem;
     color: #3182ce;
@@ -388,4 +388,40 @@
     border: none;
     cursor: pointer;
     padding: 0;
-  }
+}
+
+/* ローディングインジケータ */
+.loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+.loading-text {
+    color: #333;
+    font-size: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
