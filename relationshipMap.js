@@ -177,6 +177,35 @@ class RelationshipMap {
         }
     }
     
+    // フィルターをリセット
+    resetFilters() {
+        // 現在のズーム状態を保存
+        const currentTransform = d3.zoomTransform(this.svg.node());
+        
+        // 検索フィルターをクリア
+        this.searchInput.value = '';
+        this.searchFilter = '';
+        
+        // カテゴリフィルターをすべて選択状態に
+        this.categories.forEach(category => {
+            this.selectedCategories[category] = true;
+        });
+        
+        // カテゴリフィルターUI更新
+        this.renderCategoryFilters();
+        
+        // 再描画
+        this.render();
+        
+        // 描画後に保存したズーム状態を復元
+        setTimeout(() => {
+            this.svg.call(
+                this.zoom.transform,
+                currentTransform
+            );
+        }, 10);
+    }
+    
     // カテゴリフィルター描画
     renderCategoryFilters() {
     this.categoryFiltersEl.innerHTML = '';
@@ -353,64 +382,54 @@ class RelationshipMap {
     
     // ノードとリンク描画
     this.renderNodesAndLinks(timelineScale);
+
+    // 最後にズーム状態を保存
+    this.saveCurrentTransform();
     }
     
     // ズーム機能セットアップ
     // 初期表示位置を中央に調整
     setupZoom(timelineScale) {
-        // ズームとパン機能を追加 - マウスホイールは縦スクロールのみに
+        // ズームとパン機能を追加
         this.zoom = d3.zoom()
-        .scaleExtent([0.3, 2])
-        .on("zoom", (event) => {
-            // ズームレベルを10%刻みに丸める
-            const rawScale = event.transform.k;
-            const roundedScale = Math.round(rawScale * 10) / 10;
-            
-            // ズームレベルを保存
-            this.zoomLevel = roundedScale;
-            this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
-            
-            // x方向のズームは無効化し、y方向のみスクロール可能に
-            const newTransform = d3.zoomIdentity
-            .translate(event.transform.x, event.transform.y)
-            .scale(roundedScale);
-            this.container.attr("transform", newTransform);
-        });
-        
-        // マウスホイールイベントを処理するよう設定
-        this.svg.call(this.zoom)
-            .on("wheel.zoom", (event) => {
-                event.preventDefault(); // デフォルトのスクロール動作を防止
+            .scaleExtent([0.3, 2])
+            .on("zoom", (event) => {
+                // ズームレベルを10%刻みに丸める
+                const rawScale = event.transform.k;
+                const roundedScale = Math.round(rawScale * 10) / 10;
                 
-                // 縦スクロールに変換
-                const delta = event.deltaY;
-                const currentTransform = d3.zoomTransform(this.svg.node());
+                // ズームレベルを保存
+                this.zoomLevel = roundedScale;
+                this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
                 
-                // 現在のスケールを維持したまま縦方向にのみ移動
-                const newTransform = d3.zoomIdentity
-                    .translate(currentTransform.x, currentTransform.y - delta * 0.5)
-                    .scale(currentTransform.k);
-                
-                // アニメーションなしで変形を適用
-                this.container.attr("transform", newTransform);
-                
-                // 現在のズーム状態を更新
-                this.svg.property("__zoom", newTransform);
+                // コンテナの変形を適用
+                this.container.attr("transform", event.transform);
             });
         
-        // 初期表示位置の計算 - 中央に配置
-        const initialScale = 0.8;
-        const centerX = this.dimensions.width / 2;
-        const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
-        const centerY = this.dimensions.height / 2 - timelineCenter / 2;
+        // SVGにズーム動作を適用
+        this.svg.call(this.zoom);
         
-        this.svg.call(
-            this.zoom.transform, 
-            d3.zoomIdentity.translate(centerX, centerY).scale(initialScale)
-        );
-        
-        this.zoomLevel = initialScale;
-        this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+        // 以前の変換状態があれば再利用、なければ初期位置を設定
+        if (this._savedTransform) {
+            this.svg.call(
+                this.zoom.transform,
+                this._savedTransform
+            );
+        } else {
+            // 初期表示位置
+            const initialScale = 0.8;
+            const centerX = this.dimensions.width / 2;
+            const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
+            const centerY = this.dimensions.height / 2 - timelineCenter / 2;
+            
+            this.svg.call(
+                this.zoom.transform,
+                d3.zoomIdentity.translate(centerX, centerY).scale(initialScale)
+            );
+            
+            this.zoomLevel = initialScale;
+            this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+        }
     }
     
     // タイムライン描画
@@ -972,27 +991,23 @@ class RelationshipMap {
     
     // ノード名でフィルター
     filterByNodeName(name) {
-    this.searchInput.value = name;
-    this.searchFilter = name;
-    this.render();
-    }
-
-    // フィルターをリセット
-    resetFilters() {
-        // 検索フィルターをクリア
-        this.searchInput.value = '';
-        this.searchFilter = '';
+        // 現在のズーム状態を保存
+        const currentTransform = d3.zoomTransform(this.svg.node());
         
-        // カテゴリフィルターをすべて選択状態に
-        this.categories.forEach(category => {
-            this.selectedCategories[category] = true;
-        });
-        
-        // カテゴリフィルターUI更新
-        this.renderCategoryFilters();
+        // 検索フィルターを設定
+        this.searchInput.value = name;
+        this.searchFilter = name;
         
         // 再描画
         this.render();
+        
+        // 描画後に保存したズーム状態を復元
+        setTimeout(() => {
+            this.svg.call(
+                this.zoom.transform,
+                currentTransform
+            );
+        }, 10); // 少し遅延させて確実に再描画後に実行
     }
     
     // IDでノードを選択
@@ -1041,6 +1056,13 @@ class RelationshipMap {
         this.zoom.transform, 
         d3.zoomIdentity.translate(this.dimensions.width / 2, this.dimensions.height / 2).scale(0.8)
         );
+    }
+
+    // 現在のズーム状態を保存
+    saveCurrentTransform() {
+        if (this.svg && this.svg.node()) {
+            this._savedTransform = d3.zoomTransform(this.svg.node());
+        }
     }
 }
 
