@@ -816,17 +816,49 @@ class RelationshipMap {
         this.nodeDetailEl.style.display = 'none';
         
         if (node.type === '人物') {
-            // 人物用詳細パネル
+            // カテゴリーに応じた色を取得
+            let categoryColor;
+            switch (node.category) {
+                case '建築家': categoryColor = '#4299E1'; break;
+                case '写真家': categoryColor = '#F6AD55'; break;
+                case 'エンジニア': categoryColor = '#48BB78'; break;
+                case 'デザイナー': categoryColor = '#F687B3'; break;
+                default: categoryColor = '#A0AEC0';
+            }
+            
+            // 人物詳細パネル
             let html = `
             <h3>${node.name}</h3>
-            <p><span class="font-medium">分類:</span> ${node.category}</p>
+            
+            <div class="node-detail-section">
+                <div class="node-detail-section-title">情報</div>
+                <div class="node-detail-type">
+                    <div class="node-detail-type-indicator" style="background-color: ${categoryColor}"></div>
+                    <span>分類: ${node.category}</span>
+                </div>
+            </div>
             `;
             
+            if (node.description) {
+                html += `
+                    <div class="node-detail-section">
+                    <div class="node-detail-section-title">説明</div>
+                    <p class="node-detail-description">${node.description}</p>
+                    </div>
+                `;
+            }
+            
             if (node.tags && node.tags.length > 0) {
-                html += '<div><span class="font-medium">タグ:</span><div class="tag-list">';
+                html += `
+                    <div class="node-detail-section">
+                    <div class="node-detail-section-title">タグ</div>
+                    <div class="node-detail-tags">
+                `;
+                
                 node.tags.forEach(tag => {
-                    html += `<span class="tag">${tag}</span>`;
+                    html += `<span class="node-detail-tag" onclick="map.filterByNodeName('${tag}')">${tag}</span>`;
                 });
+                
                 html += '</div></div>';
             }
             
@@ -835,7 +867,7 @@ class RelationshipMap {
             this.personDetailEl.innerHTML = html;
             this.personDetailEl.style.display = 'block';
         } else {
-            // 人物以外用詳細パネル
+            // 人物以外の詳細パネル (論考、書籍、組織)
             let html = `
             <button class="node-detail-close" onclick="map.hideNodeDetail()">✕</button>
             <h2>${node.name}</h2>
