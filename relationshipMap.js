@@ -801,6 +801,16 @@ class RelationshipMap {
     this.hoverInfoEl.style.display = 'none';
     }
     
+    // タイプに基づいた色を返す関数
+    getTypeColor(type) {
+        switch(type) {
+            case '論考': return "#F6AD55"; // オレンジ
+            case '書籍': return "#F687B3"; // ピンク
+            case '組織': return "#805AD5"; // 紫
+            default: return "#A0AEC0"; // グレー（デフォルト）
+        }
+    }
+
     // ノード詳細表示
     renderNodeDetail(node) {
         // 先に両方の詳細パネルを非表示に
@@ -838,75 +848,76 @@ class RelationshipMap {
         
         this.personDetailEl.innerHTML = html;
         this.personDetailEl.style.display = 'block';
-    } else {
-        // 人物以外の詳細パネル (論考、書籍、組織)
-        let html = `
-        <button class="node-detail-close" onclick="map.hideNodeDetail()">✕</button>
-        <h2>${node.name}</h2>
-        
-        <div class="node-detail-section">
-            <div class="node-detail-section-title">情報</div>
-            <div class="node-detail-type">
-            <div class="node-detail-type-indicator" style="background-color: ${node.color}"></div>
-            <span>${node.type}</span>
-            </div>
-            ${node.year ? `<div class="node-detail-year"><span class="font-medium">年:</span> ${node.year}</div>` : ''}
-        </div>
-        `;
-        
-        if (node.description) {
-        html += `
+
+        } else {
+            // 人物以外の詳細パネル (論考、書籍、組織)
+            let html = `
+            <button class="node-detail-close" onclick="map.hideNodeDetail()">✕</button>
+            <h2>${node.name}</h2>
+            
             <div class="node-detail-section">
-            <div class="node-detail-section-title">説明</div>
-            <p class="node-detail-description">${node.description}</p>
-            </div>
-        `;
-        }
-        
-        if (node.tags && node.tags.length > 0) {
-        html += `
-            <div class="node-detail-section">
-            <div class="node-detail-section-title">タグ</div>
-            <div class="node-detail-tags">
-        `;
-        
-        node.tags.forEach(tag => {
-            html += `<span class="node-detail-tag" onclick="map.filterByNodeName('${tag}')">${tag}</span>`;
-        });
-        
-        html += '</div></div>';
-        }
-        
-        // 関連する人物
-        const relatedPeople = this.getRelatedPeople(node);
-        
-        if (relatedPeople.length > 0) {
-        html += `
-            <div class="node-detail-section">
-            <div class="node-detail-section-title">関連する人物</div>
-            <div class="related-people">
-        `;
-        
-        relatedPeople.forEach(person => {
-            html += `
-            <div class="related-person" onclick="map.selectNodeById('${person.id}')">
-                <div class="related-person-indicator"></div>
-                <div>
-                <div class="related-person-name">${person.name}</div>
-                <div class="related-person-category">${person.category}</div>
+                <div class="node-detail-section-title">情報</div>
+                <div class="node-detail-type">
+                <div class="node-detail-type-indicator" style="background-color: ${getTypeColor(node.type)}"></div>
+                <span>${node.type}</span>
                 </div>
+                ${node.year ? `<div class="node-detail-year"><span class="font-medium">年:</span> ${node.year}</div>` : ''}
             </div>
             `;
-        });
-        
-        html += '</div></div>';
+            
+            if (node.description) {
+            html += `
+                <div class="node-detail-section">
+                <div class="node-detail-section-title">説明</div>
+                <p class="node-detail-description">${node.description}</p>
+                </div>
+            `;
+            }
+            
+            if (node.tags && node.tags.length > 0) {
+            html += `
+                <div class="node-detail-section">
+                <div class="node-detail-section-title">タグ</div>
+                <div class="node-detail-tags">
+            `;
+            
+            node.tags.forEach(tag => {
+                html += `<span class="node-detail-tag" onclick="map.filterByNodeName('${tag}')">${tag}</span>`;
+            });
+            
+            html += '</div></div>';
+            }
+            
+            // 関連する人物
+            const relatedPeople = this.getRelatedPeople(node);
+            
+            if (relatedPeople.length > 0) {
+            html += `
+                <div class="node-detail-section">
+                <div class="node-detail-section-title">関連する人物</div>
+                <div class="related-people">
+            `;
+            
+            relatedPeople.forEach(person => {
+                html += `
+                <div class="related-person" onclick="map.selectNodeById('${person.id}')">
+                    <div class="related-person-indicator"></div>
+                    <div>
+                    <div class="related-person-name">${person.name}</div>
+                    <div class="related-person-category">${person.category}</div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            }
+            
+            html += `<button class="filter-button" onclick="map.filterByNodeName('${node.name}')">このノードでフィルター</button>`;
+            
+            this.nodeDetailEl.innerHTML = html;
+            this.nodeDetailEl.style.display = 'block';
         }
-        
-        html += `<button class="filter-button" onclick="map.filterByNodeName('${node.name}')">このノードでフィルター</button>`;
-        
-        this.nodeDetailEl.innerHTML = html;
-        this.nodeDetailEl.style.display = 'block';
-    }
     }
     
     // ノード詳細非表示
