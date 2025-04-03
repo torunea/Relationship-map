@@ -404,6 +404,34 @@ class RelationshipMap {
                 
                 // コンテナの変形を適用
                 this.container.attr("transform", event.transform);
+            })
+            // ホイールイベントのカスタム処理
+            .filter(event => {
+                // ホイール以外のイベントはそのまま処理
+                if (event.type !== 'wheel') return true;
+
+                // ホイールイベントの場合は特別な処理
+                event.preventDefault();
+                
+                // 現在の変形を取得
+                const currentTransform = d3.zoomTransform(this.svg.node());
+                
+                // 縦方向のスクロール量
+                const scrollAmount = event.deltaY * 0.5;
+                
+                // X方向は維持し、Y方向のみ変更した新しい変形を設定
+                const newTransform = d3.zoomIdentity
+                    .translate(currentTransform.x, currentTransform.y - scrollAmount)
+                    .scale(currentTransform.k);
+                
+                // 新しい変形を適用
+                this.container.attr("transform", newTransform);
+                
+                // ズーム状態を更新
+                this.svg.property("__zoom", newTransform);
+                
+                // デフォルトのズーム動作をキャンセル
+                return false;
             });
         
         // SVGにズーム動作を適用
@@ -439,7 +467,7 @@ class RelationshipMap {
         
         const timelineGroup = this.container.append("g")
             .attr("class", "timeline")
-            .attr("transform", "translate(-500, 0)"); // ここで左に100px移動
+            .attr("transform", "translate(-200, 0)"); // ここで左に200px移動
         
         // タイムラインの開始と終了を取得
         const minYear = this.years[0];
