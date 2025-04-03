@@ -205,7 +205,7 @@ class RelationshipMap {
             );
         }, 10);
     }
-    
+
     // カテゴリフィルター描画
     renderCategoryFilters() {
     this.categoryFiltersEl.innerHTML = '';
@@ -416,17 +416,16 @@ class RelationshipMap {
                 this._savedTransform
             );
         } else {
-            // 初期表示位置
+            /// 初期表示位置
             const initialScale = 0.8;
-            const centerX = this.dimensions.width / 2;
-            const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
-            const centerY = this.dimensions.height / 2 - timelineCenter / 2;
-            
+            const centerX = this.dimensions.width / 2; // 画面の横中央
+            const centerY = this.dimensions.height / 2; // 画面の縦中央
+
             this.svg.call(
-                this.zoom.transform,
+                this.zoom.transform, 
                 d3.zoomIdentity.translate(centerX, centerY).scale(initialScale)
             );
-            
+
             this.zoomLevel = initialScale;
             this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
         }
