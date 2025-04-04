@@ -5,5 +5,5 @@ const CONFIG = {
     },
     
     // デフォルトデータを使用するかどうか
-    useDefaultData: true // Googleスプレッドシートからデータ読み込み
+    useDefaultData: false // Googleスプレッドシートからデータ読み込み
 };
