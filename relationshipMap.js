@@ -765,7 +765,7 @@ class RelationshipMap {
                 const testLine = line + (line ? ' ' : '') + words[i];
                 // 日本語かどうかを判定
                 const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
-                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6;
+                const estimatedWidth = isJapanese ? testLine.length * 8 : testLine.length * 3; // （11/6から変更）日本語は少し広めに見積もる
                 
                 if (estimatedWidth > width && i > 0) {
                     // 1行に収まらない場合は折り返し
@@ -829,7 +829,7 @@ class RelationshipMap {
                 
                 // 行の幅をテスト（日本語の場合は文字数で概算）
                 const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
-                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6;
+                const estimatedWidth = isJapanese ? testLine.length * 8 : testLine.length * 3; // （11/6から変更）日本語は少し広めに見積もる
                 
                 if (estimatedWidth > width && i > 0) {
                     // 1行目を追加
