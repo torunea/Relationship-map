@@ -11,43 +11,40 @@ class DataLoader {
 
     // ウェブに公開されたスプレッドシートからデータを読み込む
     async loadFromSpreadsheet() {
-    if (!this.spreadsheetId) {
-        console.error('スプレッドシートIDが設定されていません');
-        return null;
-    }
-
-    try {
-        // 人物データのシート読み込み
-        const peopleResponse = await fetch(
-        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=人物`
-        );
-        const peopleCSV = await peopleResponse.text();
-        const peopleData = this.parseCSV(peopleCSV);
-
-        // 論考・書籍データのシート読み込み
-        const worksResponse = await fetch(
-        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=論考書籍`
-        );
-        const worksCSV = await worksResponse.text();
-        const worksData = this.parseCSV(worksCSV);
-
-        // 組織データのシート読み込み
-        const orgsResponse = await fetch(
-        `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:csv&sheet=組織`
-        );
-        const orgsCSV = await orgsResponse.text();
-        const orgsData = this.parseCSV(orgsCSV);
-
-        // データの整形
-        return {
-        people: this.mapPeopleData(peopleData),
-        works: this.mapWorksData(worksData),
-        organizations: this.mapOrgsData(orgsData)
-        };
-    } catch (error) {
-        console.error('スプレッドシートからのデータ読み込みエラー:', error);
-        return null;
-    }
+        if (!this.spreadsheetId) {
+            console.error('スプレッドシートIDが設定されていません');
+            return null;
+        }
+        
+        try {
+            // 公開されたCSVリンクを直接使用
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/pub?output=csv`;
+            
+            // 人物データのシート読み込み
+            const peopleResponse = await fetch(`${csvUrl}&gid=0`); // 最初のシートを人物データとする
+            const peopleCSV = await peopleResponse.text();
+            const peopleData = this.parseCSV(peopleCSV);
+            
+            // 論考・書籍データのシート読み込み
+            const worksResponse = await fetch(`${csvUrl}&gid=1`); // 2番目のシートを論考書籍とする
+            const worksCSV = await worksResponse.text();
+            const worksData = this.parseCSV(worksCSV);
+            
+            // 組織データのシート読み込み
+            const orgsResponse = await fetch(`${csvUrl}&gid=2`); // 3番目のシートを組織とする
+            const orgsCSV = await orgsResponse.text();
+            const orgsData = this.parseCSV(orgsCSV);
+            
+            // データの整形
+            return {
+                people: this.mapPeopleData(peopleData),
+                works: this.mapWorksData(worksData),
+                organizations: this.mapOrgsData(orgsData)
+            };
+        } catch (error) {
+            console.error('スプレッドシートからのデータ読み込みエラー:', error);
+            return null;
+        }
     }
 
     // CSVデータをパースする
