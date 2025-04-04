@@ -665,7 +665,14 @@ class RelationshipMap {
         .selectAll("line")
         .data(this.filteredLinks)
         .enter().append("line")
-        .attr("stroke", "#E53E3E") // 説明文関連は赤色で統一
+        .attr("stroke", d => {
+            // リンクタイプに基づいて色を設定
+            if (d.type === '組織関連') {
+                return "#4A90E2"; // 青色 - 組織関連
+            } else {
+                return "#E53E3E"; // 赤色 - 説明文関連（人物関連）
+            }
+        })
         .attr("stroke-opacity", 0.8)
         .attr("stroke-width", 1.5);
     

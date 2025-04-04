@@ -140,7 +140,8 @@ body {
     margin-right: 0.25rem;
 }
 
-.mention-line { background-color: #E53E3E; }
+.mention-line { background-color: #E53E3E; } /* 人物関連（赤） */
+.org-line { background-color: #4A90E2; } /* 組織関連（青） */
 
 .help-text {
     margin-left: auto;

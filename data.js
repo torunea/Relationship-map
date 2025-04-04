@@ -158,6 +158,48 @@ function processData(externalData = null) {
     }
     });
     
+    // 3. 書籍・論考と組織の紐付け - 説明文の直接言及のみ
+    DATA.works.forEach(work => {
+        // 書籍・論考の説明文に組織の名前が含まれるかチェック
+        if (work.description) {
+            DATA.organizations.forEach(org => {
+                if (work.description.includes(org.name)) {
+                    links.push({
+                        source: `work-${work.id}`,
+                        target: `org-${org.id}`,
+                        value: 3,
+                        type: '組織関連' // 組織と書籍・論考の関係を識別するタイプ
+                    });
+                }
+            });
+        }
+    });
+
+    // 逆方向も確認（組織の説明文に書籍・論考名が含まれているか）
+    DATA.organizations.forEach(org => {
+        // 組織の説明文に書籍・論考の名前が含まれるかチェック
+        if (org.description) {
+            DATA.works.forEach(work => {
+                if (org.description.includes(work.name)) {
+                    // 既存のリンクと重複がないか確認
+                    const existingLink = links.find(link => 
+                        (link.source === `org-${org.id}` && link.target === `work-${work.id}`) ||
+                        (link.source === `work-${work.id}` && link.target === `org-${org.id}`)
+                    );
+                    
+                    if (!existingLink) {
+                        links.push({
+                            source: `org-${org.id}`,
+                            target: `work-${work.id}`,
+                            value: 3,
+                            type: '組織関連' // 組織と書籍・論考の関係を識別するタイプ
+                        });
+                    }
+                }
+            });
+        }
+    });
+    
     // ソートした年のリスト
     const sortedYears = Array.from(years).sort((a, b) => a - b);
 
