@@ -10,6 +10,7 @@ class DataLoader {
     }
 
     // ウェブに公開されたスプレッドシートからデータを読み込む
+    // dataLoader.js 内の loadFromSpreadsheet メソッド
     async loadFromSpreadsheet() {
         if (!this.spreadsheetId) {
             console.error('スプレッドシートIDが設定されていません');
@@ -17,9 +18,20 @@ class DataLoader {
         }
         
         try {
+            // console.logを追加してデバッグ
+            console.log('スプレッドシートID:', this.spreadsheetId);
+            
             // 公開されたCSVリンクを直接使用
             const csvUrl = `https://docs.google.com/spreadsheets/d/e/${this.spreadsheetId}/pub?output=csv`;
+            console.log('CSV URL:', csvUrl);
             
+            // テスト用コード - URLが有効か確認
+            const testResponse = await fetch(csvUrl);
+            console.log('テストレスポンス:', testResponse.status, testResponse.ok);
+            if (!testResponse.ok) {
+                throw new Error(`スプレッドシートのアクセスに失敗しました (${testResponse.status})`);
+            }
+
             // 人物データのシート読み込み
             const peopleResponse = await fetch(`${csvUrl}&gid=0`); // 最初のシートを人物データとする
             const peopleCSV = await peopleResponse.text();

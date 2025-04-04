@@ -367,31 +367,66 @@ class RelationshipMap {
     
     // マップ描画
     render() {
-    // ノードをフィルタリング
-    this.filterNodes();
-    
-    // SVGをクリア
-    this.svg.selectAll("*").remove();
-    
-    // コンテナ作成
-    this.container = this.svg.append("g");
-    
-    // タイムラインスケール
-    const timelineScale = this.createTimelineScale();
-    
-    // ズーム機能
-    this.setupZoom(timelineScale);
-    
-    // タイムライン描画
-    this.renderTimeline(timelineScale);
-    
-    // ノードとリンク描画
-    this.renderNodesAndLinks(timelineScale);
-
-    // 最後にズーム状態を保存
-    this.saveCurrentTransform();
+        // ノードをフィルタリング
+        this.filterNodes();
+        
+        // SVGをクリア
+        this.svg.selectAll("*").remove();
+        
+        // コンテナ作成
+        this.container = this.svg.append("g");
+        
+        // タイムラインスケール
+        const timelineScale = this.createTimelineScale();
+        
+        // 安全チェック - years配列が空でないか確認
+        if (!this.years || this.years.length === 0) {
+            console.warn("年データが不足しています。タイムラインはスキップされます。");
+            // 最小限のセットアップで続行
+            this.setupZoomSimple();
+            this.renderNodesAndLinks(null);
+            return;
+        }
+        
+        // ズーム機能
+        this.setupZoom(timelineScale);
+        
+        // タイムライン描画
+        this.renderTimeline(timelineScale);
+        
+        // ノードとリンク描画
+        this.renderNodesAndLinks(timelineScale);
+        
+        // 最後にズーム状態を保存
+        this.saveCurrentTransform();
     }
-    
+
+    // 簡素化されたズームセットアップ（年データがない場合用）
+    setupZoomSimple() {
+        this.zoom = d3.zoom()
+            .scaleExtent([0.3, 2])
+            .on("zoom", (event) => {
+                this.zoomLevel = event.transform.k;
+                this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+                this.container.attr("transform", event.transform);
+            });
+            
+        this.svg.call(this.zoom);
+        
+        // シンプルな中央配置
+        const centerX = this.dimensions.width / 2;
+        const centerY = this.dimensions.height / 2;
+        const initialScale = 0.8;
+        
+        this.svg.call(
+            this.zoom.transform,
+            d3.zoomIdentity.translate(centerX, centerY).scale(initialScale)
+        );
+        
+        this.zoomLevel = initialScale;
+        this.zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
+    }
+        
     // ズーム機能セットアップ
     // 初期表示位置を中央に調整
     setupZoom(timelineScale) {
@@ -533,24 +568,34 @@ class RelationshipMap {
     }
     
     // ノードとリンク描画
+    // ノードとリンク描画メソッドも修正
     renderNodesAndLinks(timelineScale) {
-    // シミュレーション設定
-    const minYear = this.years[0];
-    const maxYear = this.years[this.years.length - 1];
-    
-    this.simulation = d3.forceSimulation(this.filteredNodes)
-        .force("link", d3.forceLink(this.filteredLinks).id(d => d.id).distance(150))
-        .force("charge", d3.forceManyBody().strength(-300))
-
-        // シミュレーション設定の衝突検出部分
-        .force("collision", d3.forceCollide().radius(d => {
-            // 人物ノードとそれ以外で半径を変える
-            if (d.type === '人物') {
-                return d.radius + 20;
-            } else {
-                return 70; // 四角形の対角線の半分くらいの値
+        // シミュレーション設定
+        const minYear = this.years && this.years.length > 0 ? this.years[0] : 2000;
+        const maxYear = this.years && this.years.length > 0 ? this.years[this.years.length - 1] : 2023;
+        
+        // timelineScaleがnullの場合の代替関数を提供
+        const getYPosition = (year) => {
+            if (!timelineScale) {
+                // timelineScaleがない場合はデフォルト位置を返す
+                return this.dimensions.height / 2;
             }
-        }))
+            return timelineScale(year);
+        };
+    
+        this.simulation = d3.forceSimulation(this.filteredNodes)
+            .force("link", d3.forceLink(this.filteredLinks).id(d => d.id).distance(150))
+            .force("charge", d3.forceManyBody().strength(-300))
+
+            // シミュレーション設定の衝突検出部分
+            .force("collision", d3.forceCollide().radius(d => {
+                // 人物ノードとそれ以外で半径を変える
+                if (d.type === '人物') {
+                    return d.radius + 20;
+                } else {
+                    return 70; // 四角形の対角線の半分くらいの値
+                }
+            }))
         
         .force("x", d3.forceX().x(d => {
             // 人物以外のノードを中心近くに、人物ノードを左右に分散
@@ -576,6 +621,7 @@ class RelationshipMap {
                 }
             }
         }).strength(0.4)) // 強めの力で引き寄せる
+
         .force("y", d3.forceY().y(d => {
             // 人物ノードはY軸方向に均等に分散、それ以外は年に基づいて配置
             if (d.type === '人物') {
@@ -596,21 +642,22 @@ class RelationshipMap {
                 .filter(y => y !== null);
                 
                 if (relatedNodes.length > 0) {
-                    // 関連ノードの平均Y座標を使用
-                    const avgY = relatedNodes.reduce((a, b) => a + b, 0) / relatedNodes.length;
-                    return avgY;
-                } else {
-                    // 関連がない場合はタイムライン中央付近に配置
-                    return timelineScale(minYear + (maxYear - minYear) / 2);
-                }
-            } else if (d.year) {
-                // 年情報がある場合はタイムラインに基づいて配置
-                return timelineScale(d.year);
+                // 関連ノードの平均Y座標を使用
+                const avgY = relatedNodes.reduce((a, b) => a + b, 0) / relatedNodes.length;
+                return isNaN(avgY) ? this.dimensions.height / 2 : avgY;
             } else {
-                // 年情報がない場合はY軸方向に均等に分散
-                return this.timelineHeight / 2;
+                // 関連がない場合は中央に配置
+                return this.dimensions.height / 2;
             }
-        }).strength(d => d.year ? 0.8 : 0.2)) // 年情報があるノードはより強く引き寄せる
+        } else if (d.year) {
+            // 年情報がある場合
+            const y = getYPosition(d.year);
+            return isNaN(y) ? this.dimensions.height / 2 : y;
+        } else {
+            // 年情報がない場合
+            return this.dimensions.height / 2;
+        }
+    }).strength(d => d.year ? 0.8 : 0.2)) // 年情報があるノードはより強く引き寄せる
     
     // リンク描画
     const link = this.container.append("g")
