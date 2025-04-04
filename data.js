@@ -6,10 +6,10 @@ function processData(externalData = null) {
         { id: 1, name: '田中太郎', category: '建築家', tags: '近代建築論,日本の住宅' },
         { id: 2, name: '佐藤花子', category: '写真家', tags: '風景写真,自然' },
         { id: 3, name: '鈴木一郎', category: '建築家', tags: '都市計画,公共空間' },
-        { id: 4, name: '山田健太', category: 'エンジニア', tags: 'AIシステム,機械学習' },
+        { id: 4, name: '山田健太', category: '思想家', tags: 'AIシステム,機械学習' },
         { id: 5, name: '高橋恵子', category: 'デザイナー', tags: 'インターフェース,UX' },
         { id: 6, name: '渡辺誠', category: '写真家', tags: '自然写真,環境' },
-        { id: 7, name: '伊藤直子', category: 'エンジニア', tags: 'オープンソース,アルゴリズム' },
+        { id: 7, name: '伊藤直子', category: '思想家', tags: 'オープンソース,アルゴリズム' },
         { id: 8, name: '小林健一', category: 'デザイナー', tags: '広告,ブランディング' },
         { id: 9, name: '中村拓也', category: '建築家', tags: '環境建築,持続可能性' },
         { id: 10, name: '加藤美咲', category: '写真家', tags: 'ポートレート,光の表現' },
@@ -18,7 +18,7 @@ function processData(externalData = null) {
         { id: 1, name: '近代建築論', type: '論考', year: 2015, tags: '建築家,理論', description: '田中太郎による現代建築の考察' },
         { id: 2, name: '日本の自然風景', type: '書籍', year: 2018, tags: '写真家,自然', description: '佐藤花子と渡辺誠が撮影した風景写真集' },
         { id: 3, name: '都市と人間', type: '論考', year: 2020, tags: '建築家,都市計画', description: '鈴木一郎が都市空間について論じた評論' },
-        { id: 4, name: 'AIの倫理', type: '書籍', year: 2022, tags: 'エンジニア,技術論', description: '山田健太と伊藤直子による技術と社会の関係性についての考察' },
+        { id: 4, name: 'AIの倫理', type: '書籍', year: 2022, tags: '思想家,技術論', description: '山田健太と伊藤直子による技術と社会の関係性についての考察' },
         { id: 5, name: '現代デザイン史とかなんとか', type: '書籍', year: 2016, tags: 'デザイナー,歴史', description: '高橋恵子が編纂した現代デザインの歴史書。長い文章をここに入れるとどのような表示になるか見てみたいのでこの項目は非常に長い文字列で構成されています。人物についても加藤美咲や山田健太も頑張っています。' },
         { id: 6, name: '光と影の表現', type: '論考', year: 2019, tags: '写真家,技法', description: '加藤美咲による写真表現の技法についての論考' },
     ],
@@ -55,7 +55,7 @@ function processData(externalData = null) {
             case '写真家':
                 color = '#F6AD55'; // オレンジ
                 break;
-            case 'エンジニア':
+            case '思想家':
                 color = '#48BB78'; // 緑
                 break;
             case 'デザイナー':

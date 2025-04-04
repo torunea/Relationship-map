@@ -868,7 +868,7 @@ class RelationshipMap {
             switch (node.category) {
                 case '建築家': categoryColor = '#4299E1'; break;
                 case '写真家': categoryColor = '#F6AD55'; break;
-                case 'エンジニア': categoryColor = '#48BB78'; break;
+                case '思想家': categoryColor = '#48BB78'; break;
                 case 'デザイナー': categoryColor = '#F687B3'; break;
                 default: categoryColor = '#A0AEC0';
             }
