@@ -591,7 +591,7 @@ class RelationshipMap {
             .force("collision", d3.forceCollide().radius(d => {
                 // 人物ノードとそれ以外で半径を変える
                 if (d.type === '人物') {
-                    return d.radius + 20;
+                    return 50; // 衝突半径を大きくする (45 + マージン)
                 } else {
                     return 70; // 四角形の対角線の半分くらいの値
                 }
@@ -694,12 +694,13 @@ class RelationshipMap {
     });
 
     // 人物ノードは円で描画
+    // 人物ノードの半径を大きくする
     node.filter(d => d.type === '人物')
-    .append("circle")
-    .attr("r", d => d.radius)
-    .attr("fill", d => d.color)
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1);
+        .append("circle")
+        .attr("r", d => 45) // 元の35から45に増加
+        .attr("fill", d => d.color)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1);
 
     // 人物以外のノードは四角形で描画 - 無彩色に
     const rectWidth = 120; // 四角形の幅を固定
@@ -718,52 +719,94 @@ class RelationshipMap {
 
     // 人物以外のノードにタイプラベルを追加
     node.filter(d => d.type !== '人物')
-    .append("rect")
-    .attr("width", 40)
-    .attr("height", 16)
-    .attr("x", -20)
-    .attr("y", 15)
-    .attr("rx", 3)
-    .attr("ry", 3)
-    .attr("fill", d => {
-        // タイプに応じた色を設定
-        if (d.type === '論考') return "#F6AD55"; // オレンジ
-        if (d.type === '書籍') return "#F687B3"; // ピンク
-        if (d.type === '組織') return "#805AD5"; // 紫
-        return "#A0AEC0"; // デフォルトはグレー
-    });
+        .append("rect")
+        .attr("width", 40)
+        .attr("height", 16)
+        .attr("x", -20)
+        .attr("y", 15)
+        .attr("rx", 3)
+        .attr("ry", 3)
+        .attr("fill", d => {
+            // タイプに応じた色を設定
+            if (d.type === '論考') return "#F6AD55"; // オレンジ
+            if (d.type === '書籍') return "#F687B3"; // ピンク
+            if (d.type === '組織') return "#805AD5"; // 紫
+            return "#A0AEC0"; // デフォルトはグレー
+        });
 
     // タイプラベルのテキスト
     node.filter(d => d.type !== '人物')
-    .append("text")
-    .text(d => d.type)
-    .attr("text-anchor", "middle")
-    .attr("font-size", "8px")
-    .attr("fill", "#fff")
-    .attr("y", 25)
-    .attr("pointer-events", "none");
-
-    // ノードラベル描画 - 人物用
-    node.filter(d => d.type === '人物')
         .append("text")
-        .text(d => d.name)
-        .attr("dy", "-0.5em") // 調整
+        .text(d => d.type)
         .attr("text-anchor", "middle")
-        .attr("font-size", "11px")
+        .attr("font-size", "8px")
         .attr("fill", "#fff")
+        .attr("y", 25)
         .attr("pointer-events", "none");
 
-    // 人物ノードにカテゴリを小さく表示
+    // ノードラベル描画 - 人物用
+    // 人物ノードのラベル描画 - テキスト折り返し機能付き
+    node.filter(d => d.type === '人物')
+        .append("text")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px") // サイズはそのまま
+        .attr("fill", "#fff")
+        .attr("pointer-events", "none")
+        .attr("dy", "-0.6em") // 少し上に調整
+        .each(function(d) {
+            const text = d3.select(this);
+            const words = d.name.split(/\s+|(?<=[\u3001\u3002\uff0c\uff0e\u300c\u300d])/); // 空白と日本語の句読点で分割
+            let line = "";
+            const lineHeight = 1.1; // ems
+            const width = 70; // 円の直径に近い値
+            
+            // 名前を1行目に表示
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + (line ? ' ' : '') + words[i];
+                // 日本語かどうかを判定
+                const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
+                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6;
+                
+                if (estimatedWidth > width && i > 0) {
+                    // 1行に収まらない場合は折り返し
+                    text.append("tspan")
+                        .attr("x", 0)
+                        .attr("dy", 0)
+                        .text(line);
+                    
+                    // 2行目
+                    text.append("tspan")
+                        .attr("x", 0)
+                        .attr("dy", lineHeight + "em")
+                        .text(words[i] + (i < words.length - 1 ? "..." : ""));
+                    
+                    break; // 2行までで打ち切り
+                } else {
+                    line = testLine;
+                }
+            }
+            
+            // 1行で収まる場合
+            if (line && !text.selectAll("tspan").size()) {
+                text.text(line);
+            }
+        });
+
+    // 人物ノードにカテゴリを小さく表示 - 位置調整
     node.filter(d => d.type === '人物')
         .append("text")
         .text(d => d.category)
-        .attr("dy", "0.7em") // 調整
+        .attr("dy", function(d) {
+            // 名前が2行になっているかチェック
+            const nameText = d3.select(this.parentNode).select("text");
+            return nameText.selectAll("tspan").size() > 0 ? "1.6em" : "0.9em";
+        })
         .attr("text-anchor", "middle")
         .attr("font-size", "8px")
         .attr("fill", "#fff")
         .attr("opacity", 0.8)
         .attr("pointer-events", "none");
-
+        
     // ノードラベル描画 - 人物以外用（テキスト折り返し機能付き）
     node.filter(d => d.type !== '人物')
         .append("text")

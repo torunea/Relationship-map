@@ -72,7 +72,7 @@ function processData(externalData = null) {
             type: '人物',
             category: person.category,
             tags: personTags,
-            radius: 35,
+            radius: 45, // 35から45に変更
             color: color
         });
     });
