@@ -18,7 +18,7 @@ class DataLoader {
         
         try {
             // 公開されたCSVリンクを直接使用
-            const csvUrl = `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/pub?output=csv`;
+            const csvUrl = `https://docs.google.com/spreadsheets/d/e/${this.spreadsheetId}/pub?output=csv`;
             
             // 人物データのシート読み込み
             const peopleResponse = await fetch(`${csvUrl}&gid=0`); // 最初のシートを人物データとする

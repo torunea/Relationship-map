@@ -46,31 +46,36 @@ class RelationshipMap {
     
     // データ読み込み
     async loadData() {
-    this.showLoading();
-    
-    try {
-        if (CONFIG.useDefaultData) {
-        // デフォルトデータを使用
-        const processedData = processData();
-        this.setData(processedData);
-        } else {
-        // ウェブに公開されたGoogleスプレッドシートからデータ読み込み
-        dataLoader.initialize(CONFIG.spreadsheet.id);
-        const data = await dataLoader.loadFromSpreadsheet();
+        this.showLoading();
         
-        if (data) {
-            const processedData = processData(data);
+        try {
+            if (CONFIG.useDefaultData) {
+                // デフォルトデータを使用
+                const processedData = processData();
+                this.setData(processedData);
+            } else {
+                // ウェブに公開されたGoogleスプレッドシートからデータ読み込み
+                dataLoader.initialize(CONFIG.spreadsheet.id);
+                const data = await dataLoader.loadFromSpreadsheet();
+                
+                if (data && data.people && data.people.length > 0) {
+                    const processedData = processData(data);
+                    this.setData(processedData);
+                } else {
+                    console.warn('スプレッドシートからのデータが空か不完全です。デフォルトデータを使用します。');
+                    const processedData = processData();
+                    this.setData(processedData);
+                }
+            }
+        } catch (error) {
+            console.error('データ読み込みエラー:', error);
+            this.showError('データの読み込みに失敗しました。デフォルトデータを使用します。');
+            // エラー時もデフォルトデータを使用
+            const processedData = processData();
             this.setData(processedData);
-        } else {
-            throw new Error('データの読み込みに失敗しました');
+        } finally {
+            this.hideLoading();
         }
-        }
-    } catch (error) {
-        console.error('データ読み込みエラー:', error);
-        this.showError('データの読み込みに失敗しました');
-    } finally {
-        this.hideLoading();
-    }
     }
     
     // データをセット
@@ -447,8 +452,18 @@ class RelationshipMap {
             // 初期表示位置
             const initialScale = 0.8;
             const centerX = this.dimensions.width / 2;
-            const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
-            const centerY = this.dimensions.height / 2 - timelineCenter / 2;
+            
+            // NaNを防止するため、yearsが存在するか確認
+            let centerY = this.dimensions.height / 2;
+            if (this.years && this.years.length > 0) {
+                const timelineCenter = (timelineScale(this.years[this.years.length - 1]) + timelineScale(this.years[0])) / 2;
+                centerY = this.dimensions.height / 2 - timelineCenter / 2;
+            }
+            
+            // NaNチェック
+            if (isNaN(centerY)) {
+                centerY = this.dimensions.height / 2;
+            }
             
             this.svg.call(
                 this.zoom.transform,
