@@ -749,7 +749,7 @@ class RelationshipMap {
     node.filter(d => d.type === '人物')
         .append("text")
         .attr("text-anchor", "middle")
-        .attr("font-size", "11px") // サイズはそのまま
+        .attr("font-size", "9px") // サイズはそのまま
         .attr("fill", "#fff")
         .attr("pointer-events", "none")
         .attr("dy", "-0.6em") // 少し上に調整
@@ -765,7 +765,7 @@ class RelationshipMap {
                 const testLine = line + (line ? ' ' : '') + words[i];
                 // 日本語かどうかを判定
                 const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
-                const estimatedWidth = isJapanese ? testLine.length * 14 : testLine.length * 9; // （11/6から変更）日本語は少し広めに見積もる
+                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6; // （11/6から変更）日本語は少し広めに見積もる
                 
                 if (estimatedWidth > width && i > 0) {
                     // 1行に収まらない場合は折り返し
@@ -811,7 +811,7 @@ class RelationshipMap {
     node.filter(d => d.type !== '人物')
         .append("text")
         .attr("text-anchor", "middle")
-        .attr("font-size", "11px")
+        .attr("font-size", "9px")
         .attr("fill", "#4A5568") // 黒っぽい色
         .attr("pointer-events", "none")
         .attr("dy", "-0.5em")
@@ -829,7 +829,7 @@ class RelationshipMap {
                 
                 // 行の幅をテスト（日本語の場合は文字数で概算）
                 const isJapanese = /[\u3000-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(words[i]);
-                const estimatedWidth = isJapanese ? testLine.length * 14 : testLine.length * 9; // （11/6から変更）日本語は少し広めに見積もる
+                const estimatedWidth = isJapanese ? testLine.length * 11 : testLine.length * 6; // （11/6から変更）日本語は少し広めに見積もる
                 
                 if (estimatedWidth > width && i > 0) {
                     // 1行目を追加
