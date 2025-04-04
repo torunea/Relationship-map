@@ -10,40 +10,35 @@ class DataLoader {
     }
 
     // ウェブに公開されたスプレッドシートからデータを読み込む
-    // dataLoader.js 内の loadFromSpreadsheet メソッド
+    // dataLoader.js の loadFromSpreadsheet メソッド
     async loadFromSpreadsheet() {
-        if (!this.spreadsheetId) {
-            console.error('スプレッドシートIDが設定されていません');
-            return null;
-        }
-        
         try {
-            // console.logを追加してデバッグ
-            console.log('スプレッドシートID:', this.spreadsheetId);
+            // 各シートの公開リンクを直接指定
+            const peopleUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQUc9Zx1vu8LZMNjpZczqmAOOP1tGG5wmtLPtdfhD_RJKsuYp4zZaKW2JnedBTbhr7Mhnsjduhl32tm/pub?gid=0&single=true&output=csv';
+            const worksUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQUc9Zx1vu8LZMNjpZczqmAOOP1tGG5wmtLPtdfhD_RJKsuYp4zZaKW2JnedBTbhr7Mhnsjduhl32tm/pub?gid=1261876039&single=true&output=csv';
+            const orgsUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQUc9Zx1vu8LZMNjpZczqmAOOP1tGG5wmtLPtdfhD_RJKsuYp4zZaKW2JnedBTbhr7Mhnsjduhl32tm/pub?gid=2047211183&single=true&output=csv';
             
-            // 公開されたCSVリンクを直接使用
-            const csvUrl = `https://docs.google.com/spreadsheets/d/e/${this.spreadsheetId}/pub?output=csv`;
-            console.log('CSV URL:', csvUrl);
-            
-            // テスト用コード - URLが有効か確認
-            const testResponse = await fetch(csvUrl);
-            console.log('テストレスポンス:', testResponse.status, testResponse.ok);
-            if (!testResponse.ok) {
-                throw new Error(`スプレッドシートのアクセスに失敗しました (${testResponse.status})`);
-            }
-
             // 人物データのシート読み込み
-            const peopleResponse = await fetch(`${csvUrl}&gid=0`); // 最初のシートを人物データとする
+            const peopleResponse = await fetch(peopleUrl);
+            if (!peopleResponse.ok) {
+                throw new Error(`人物データの取得に失敗: ${peopleResponse.status}`);
+            }
             const peopleCSV = await peopleResponse.text();
             const peopleData = this.parseCSV(peopleCSV);
             
             // 論考・書籍データのシート読み込み
-            const worksResponse = await fetch(`${csvUrl}&gid=1`); // 2番目のシートを論考書籍とする
+            const worksResponse = await fetch(worksUrl);
+            if (!worksResponse.ok) {
+                throw new Error(`論考・書籍データの取得に失敗: ${worksResponse.status}`);
+            }
             const worksCSV = await worksResponse.text();
             const worksData = this.parseCSV(worksCSV);
             
             // 組織データのシート読み込み
-            const orgsResponse = await fetch(`${csvUrl}&gid=2`); // 3番目のシートを組織とする
+            const orgsResponse = await fetch(orgsUrl);
+            if (!orgsResponse.ok) {
+                throw new Error(`組織データの取得に失敗: ${orgsResponse.status}`);
+            }
             const orgsCSV = await orgsResponse.text();
             const orgsData = this.parseCSV(orgsCSV);
             
